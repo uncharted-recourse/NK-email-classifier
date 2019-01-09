@@ -1,1 +1,1 @@
-git+https://github.com/NewKnowledge/simon@bd678551cc8916c9d1407c5fc46f4c41307feee3
+git+https://github.com/NewKnowledge/simon@6626c1d267dc097e38ab946b00ea31d37c444b64

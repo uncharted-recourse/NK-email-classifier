@@ -63,7 +63,7 @@ print(raw_data)
 
 
 # transpose the data, make everything lower case string
-mini_batch = 50 # because of some memory issues, the next step needs to be done in stages
+mini_batch = 20 # because of some memory issues, the next step needs to be done in stages
 start = time.time()
 tmp = np.char.lower(np.transpose(raw_data[:,:mini_batch]).astype('U'))
 for i in range(1,int(raw_data.shape[1]/mini_batch)):
@@ -73,6 +73,7 @@ for i in range(1,int(raw_data.shape[1]/mini_batch)):
         tmp = np.vstack((tmp,np.char.lower(np.transpose(raw_data[:,i*mini_batch:(i+1)*mini_batch]).astype('U'))))
     except:
         print("failed string standardization on batch number "+str(i))
+        # delete corresponding entries of header?
 
 end = time.time()
 print("Time for casting data as lower case string is %f sec"%(end-start))
@@ -96,11 +97,37 @@ checkpoint_dir = "checkpoints/"
 if not os.path.isdir(checkpoint_dir):
     os.makedirs(checkpoint_dir)
 start = time.time()
-Classifier.train_model(batch_size, checkpoint_dir, model, nb_epoch, data)
+history = Classifier.train_model(batch_size, checkpoint_dir, model, nb_epoch, data)
 end = time.time()
 print("Time for training is %f sec"%(end-start))
 config = { 'encoder' :  encoder,
             'checkpoint' : Classifier.get_best_checkpoint(checkpoint_dir) }
 Classifier.save_config(config, checkpoint_dir)
-
+Classifier.plot_loss(history)
 Classifier.evaluate_model(max_cells, model, data, encoder, p_threshold)
+
+# do p_threshold ROC tuning on the test data to see if you can improve it
+start = time.time()
+p_thresholds = np.linspace(0.1,0.9,num=20)
+TPR_arr,FPR_arr = Classifier.tune_ROC_metrics(max_cells, model, data, encoder,p_thresholds)
+print("DEBUG::True positive rate w.r.t p_threshold array:")
+print(TPR_arr)
+print("DEBUG::False positive rate w.r.t p_threshold array:")
+print(FPR_arr)
+# plot
+plt.figure()
+plt.subplot(311)
+plt.plot(p_thresholds,TPR_arr)
+plt.xlabel('p_threshold')
+plt.ylabel('TPR')
+plt.subplot(312)
+plt.xlabel('p_threshold')
+plt.ylabel('FPR')
+plt.plot(p_thresholds,FPR_arr)
+plt.subplot(313)
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.plot(FPR_arr,TPR_arr)
+# timing info
+end = time.time()
+print("Time for hyperparameter (per-class threshold) is %f sec"%(end-start))
