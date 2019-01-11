@@ -13,15 +13,23 @@ maxlen = 100 # length of each sentence
 max_cells = 500 # maximum number of sentences per email
 p_threshold = 0.5 # decision boundary
 
+# define a pandas converter to truncate long cells
+def auto_truncate(val):
+    return val[-maxlen:]
+
 # read in different data files
 datapath = '/vectorizationdata/enron_emails/preprocessed_enron_emails_batch_1.csv'
-enron_batch_1 = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
+tmp = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
+enron_batch_1 = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",converters={k:auto_truncate for k in range(tmp.shape[1])},header=0)
 datapath = '/vectorizationdata/enron_emails/preprocessed_enron_emails_batch_2.csv'
-enron_batch_2 = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
+tmp = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
+enron_batch_2 = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",converters={k:auto_truncate for k in range(tmp.shape[1])},header=0)
 datapath = '/vectorizationdata/nigerian_prince/preprocessed_nigerian_prince_emails.csv'
-nigerian_prince = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
+tmp = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
+nigerian_prince = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",converters={k:auto_truncate for k in range(tmp.shape[1])},header=0)
 
-N = 400 # number of ham samples to draw from each of 2 enron batches (spam is 2*N for balance)
+
+N = 800 # number of ham samples to draw from each of 2 enron batches (spam is 2*N for balance)
 
 raw_data = np.asarray(enron_batch_1.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
 header = [['ham'],]*N
@@ -64,7 +72,7 @@ print(raw_data)
 
 
 # transpose the data, make everything lower case string
-mini_batch = 10 # because of some memory issues, the next step needs to be done in stages
+mini_batch = 100 # because of some memory issues, the next step needs to be done in stages
 start = time.time()
 tmp = np.char.lower(np.transpose(raw_data[:,:mini_batch]).astype('U'))
 tmp_header = header[:mini_batch]

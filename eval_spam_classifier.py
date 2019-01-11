@@ -63,7 +63,7 @@ print("Time for casting data as lower case string is %f sec"%(end-start))
 raw_data = tmp
 
 # load checkpoint (encoder with categories, weights)
-checkpoint_dir = "checkpoints/"
+checkpoint_dir = "checkpoints/Second_90_plus/"
 config = Simon({}).load_config('text-class.16-0.25.pkl',checkpoint_dir)
 encoder = config['encoder']
 checkpoint = config['checkpoint']
