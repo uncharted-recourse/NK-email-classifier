@@ -21,7 +21,7 @@ enron_batch_2 = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
 datapath = '/vectorizationdata/nigerian_prince/preprocessed_nigerian_prince_emails.csv'
 nigerian_prince = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
 
-N = 400 # number of ham samples to draw from each of 2 enron batches (spam is 2*N for balance)
+N = 50 # number of ham samples to draw from each of 2 enron batches (spam is 2*N for balance)
 
 raw_data = np.asarray(enron_batch_1.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
 header = [['ham'],]*N
@@ -42,36 +42,15 @@ print(raw_data.shape)
 print(raw_data)
 
 
-# grow list column by column to catch troublesome ones?
-# processed_raw_data = np.asarray(raw_data[:,0]).astype('U')[np.newaxis].T
-# for i in range(1,raw_data.shape[1]+1):
-#     print(i)
-#     print(processed_raw_data.shape)
-#     try:
-#         processed_raw_data = np.append(processed_raw_data,np.asarray(raw_data[:,i]).astype('U')[np.newaxis].T,1)
-#     except:
-#         print("failed column "+"i")
-# 
-# or preallocate?
-# processed_raw_data_2 = np.zeros(raw_data.shape,dtype=str)
-# for i in range(0,raw_data.shape[1]+1):
-#     print(i)
-#     print(processed_raw_data_2.shape)
-#     try:
-#         processed_raw_data_2[:,[i]] = np.asarray(raw_data[:,i]).astype('U')[np.newaxis].T
-#     except:
-#         print("failed column "+"i")
-
-
 # transpose the data, make everything lower case string
 mini_batch = 10 # because of some memory issues, the next step needs to be done in stages
 start = time.time()
 tmp = np.char.lower(np.transpose(raw_data[:,:mini_batch]).astype('U'))
 tmp_header = header[:mini_batch]
 for i in range(1,int(raw_data.shape[1]/mini_batch)):
-    print("DEBUG::current shape of loaded text (data,header)")
-    print(tmp.shape)
-    print(len(tmp_header))
+    # print("DEBUG::current shape of loaded text (data,header)")
+    # print(tmp.shape)
+    # print(len(tmp_header))
     try:
         tmp = np.vstack((tmp,np.char.lower(np.transpose(raw_data[:,i*mini_batch:(i+1)*mini_batch]).astype('U'))))
         tmp_header.extend(header[i*mini_batch:(i+1)*mini_batch])
@@ -83,31 +62,26 @@ end = time.time()
 print("Time for casting data as lower case string is %f sec"%(end-start))
 raw_data = tmp
 
-# set up appropriate data encoder
-Categories = ['ham','spam']
-encoder = Encoder(categories=Categories)
-encoder.process(raw_data, max_cells)
+# load checkpoint (encoder with categories, weights)
+checkpoint_dir = "checkpoints/"
+config = Simon({}).load_config('text-class.16-0.25.pkl',checkpoint_dir)
+encoder = config['encoder']
+checkpoint = config['checkpoint']
+
+print("DEBUG::CHECKPOINT:")
+print(checkpoint)
+
+Categories = encoder.categories
 # encode the data 
 X, y = encoder.encode_data(raw_data, header, maxlen)
 # setup classifier, compile model appropriately
 Classifier = Simon(encoder=encoder)
-data = Classifier.setup_test_sets(X, y)
+data = type('data_type',(object,),{'X_test':X,'y_test':y})
 model = Classifier.generate_model(maxlen, max_cells, 2,activation='softmax')
+Classifier.load_weights(checkpoint,config,model,checkpoint_dir)
 model.compile(loss='categorical_crossentropy',optimizer='adam', metrics=['binary_accuracy'])
-# train model
-batch_size = 5
-nb_epoch = 20
-checkpoint_dir = "checkpoints/"
-if not os.path.isdir(checkpoint_dir):
-    os.makedirs(checkpoint_dir)
-start = time.time()
-history = Classifier.train_model(batch_size, checkpoint_dir, model, nb_epoch, data)
-end = time.time()
-print("Time for training is %f sec"%(end-start))
-config = { 'encoder' :  encoder,
-            'checkpoint' : Classifier.get_best_checkpoint(checkpoint_dir) }
-Classifier.save_config(config, checkpoint_dir)
-Classifier.plot_loss(history)
+
+# evaluate model
 Classifier.evaluate_model(max_cells, model, data, encoder, p_threshold)
 
 # do p_threshold ROC tuning on the test data to see if you can improve it
@@ -124,13 +98,14 @@ plt.subplot(311)
 plt.plot(p_thresholds,TPR_arr)
 plt.xlabel('p_threshold')
 plt.ylabel('TPR')
+plt.title('TPR/FPR evolution')
 plt.subplot(312)
-plt.xlabel('p_threshold')
 plt.ylabel('FPR')
 plt.plot(p_thresholds,FPR_arr)
 plt.subplot(313)
 plt.xlabel('FPR')
 plt.ylabel('TPR')
+plt.title('ROC Curve')
 plt.plot(FPR_arr,TPR_arr)
 plt.show()
 # timing info
