@@ -18,18 +18,18 @@ def auto_truncate(val):
     return val[-maxlen:]
 
 # read in different data files
-datapath = '/vectorizationdata/enron_emails/preprocessed_enron_emails_batch_1.csv'
+datapath = 'data/preprocessed_enron_emails_batch_1.csv'
 tmp = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
 enron_batch_1 = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",converters={k:auto_truncate for k in range(tmp.shape[1])},header=0)
-datapath = '/vectorizationdata/enron_emails/preprocessed_enron_emails_batch_2.csv'
+datapath = 'data/preprocessed_enron_emails_batch_2.csv'
 tmp = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
 enron_batch_2 = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",converters={k:auto_truncate for k in range(tmp.shape[1])},header=0)
-datapath = '/vectorizationdata/nigerian_prince/preprocessed_nigerian_prince_emails.csv'
+datapath = 'data/preprocessed_nigerian_prince_emails.csv'
 tmp = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
 nigerian_prince = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",converters={k:auto_truncate for k in range(tmp.shape[1])},header=0)
 
 
-N = 800 # number of ham samples to draw from each of 2 enron batches (spam is 2*N for balance)
+N = 2500 # number of ham samples to draw from each of 2 enron batches (spam is 2*N for balance)
 
 raw_data = np.asarray(enron_batch_1.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
 header = [['ham'],]*N
@@ -42,33 +42,12 @@ print("DEBUG::n_ham")
 print(n_ham)
 
 # keep dataset balanced
-raw_data = np.column_stack((raw_data,np.asarray(nigerian_prince.ix[:max_cells-1,:].sample(n=n_ham,replace=False,axis=1))))
+raw_data = np.column_stack((raw_data,np.asarray(nigerian_prince.ix[:max_cells-1,:].sample(n=n_ham,replace=True,axis=1))))
 header.extend([['spam'],]*n_ham)
 
 print("DEBUG::final labeled data shape:")
 print(raw_data.shape)
 print(raw_data)
-
-
-# grow list column by column to catch troublesome ones?
-# processed_raw_data = np.asarray(raw_data[:,0]).astype('U')[np.newaxis].T
-# for i in range(1,raw_data.shape[1]+1):
-#     print(i)
-#     print(processed_raw_data.shape)
-#     try:
-#         processed_raw_data = np.append(processed_raw_data,np.asarray(raw_data[:,i]).astype('U')[np.newaxis].T,1)
-#     except:
-#         print("failed column "+"i")
-# 
-# or preallocate?
-# processed_raw_data_2 = np.zeros(raw_data.shape,dtype=str)
-# for i in range(0,raw_data.shape[1]+1):
-#     print(i)
-#     print(processed_raw_data_2.shape)
-#     try:
-#         processed_raw_data_2[:,[i]] = np.asarray(raw_data[:,i]).astype('U')[np.newaxis].T
-#     except:
-#         print("failed column "+"i")
 
 
 # transpose the data, make everything lower case string
@@ -103,7 +82,7 @@ data = Classifier.setup_test_sets(X, y)
 model = Classifier.generate_model(maxlen, max_cells, 2,activation='softmax')
 model.compile(loss='categorical_crossentropy',optimizer='adam', metrics=['binary_accuracy'])
 # train model
-batch_size = 5
+batch_size = 64
 nb_epoch = 20
 checkpoint_dir = "checkpoints/"
 if not os.path.isdir(checkpoint_dir):
