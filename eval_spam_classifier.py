@@ -8,34 +8,49 @@ from Simon import Simon
 from Simon.Encoder import Encoder
 from Simon.DataGenerator import DataGenerator
 
+# extract the first N samples from jsonl
+def LoadJSONLEmails(N=2500,datapath):
+    tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+    with open(filename) as data_file:
+        data_JSONL_lines = data_file.readlines()
+    # visualize body extraction for first email
+    idx = 0
+    sample_email = json.loads(data_JSONL_lines[idx])["body"]
+    print("DEBUG::sample email (whole, then tokenized into sentences):")
+    print(sample_email)
+    sample_email_sentence = tokenizer.tokenize(sample_email)
+    sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] # truncate
+    print(sample_email_sentence)
+    all_email_df = pd.DataFrame(sample_email_sentence,columns=['Email 0'])
+    # now, build up pandas dataframe of appropriate format for NK email classifier
+    for line in data_JSONL_lines:
+        idx = idx+1
+        sample_email = json.loads(line)["body"]
+        sample_email_sentence = tokenizer.tokenize(sample_email)
+        sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] #truncate
+        all_email_df = pd.concat([all_email_df,pd.DataFrame(sample_email_sentence,columns=['Email '+str(idx)])],axis=1)
+        if idx>=N-1:
+            break
+    
+    return all_email_df
+
 # set important parameters
-maxlen = 100 # length of each sentence
-max_cells = 500 # maximum number of sentences per email
+maxlen = 500 # max length of each sentence
+max_cells = 100 # maximum number of sentences per email
 p_threshold = 0.5 # decision boundary
 
-# read in different data files
-datapath = '/vectorizationdata/enron_emails/preprocessed_enron_emails_batch_1.csv'
-enron_batch_1 = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
-datapath = '/vectorizationdata/enron_emails/preprocessed_enron_emails_batch_2.csv'
-enron_batch_2 = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
-datapath = '/vectorizationdata/nigerian_prince/preprocessed_nigerian_prince_emails.csv'
-nigerian_prince = pd.read_csv(datapath,dtype=str,encoding="ISO-8859-1",header=0)
-
-N = 50 # number of ham samples to draw from each of 2 enron batches (spam is 2*N for balance)
-
-raw_data = np.asarray(enron_batch_1.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
-header = [['ham'],]*N
-raw_data = np.column_stack((raw_data,np.asarray(enron_batch_2.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])))
-header.extend([['ham'],]*N)
-
-n_ham = raw_data.shape[1]
-
-print("DEBUG::n_ham")
-print(n_ham)
-
+# Extract enron/nigerian prince data from JSONL format
+N = 1000 # number of samples to draw
+datapath = "/home/azunre/Downloads/enron.jsonl"
+enron_data = LoadJSONLEmails(N=N,datapath=datapath)
+N_spam = 1000 # number of samples to draw
+datapath = "/home/azunre/Downloads/nigerian.jsonl"
+nigerian_prince = LoadJSONLEmails(N=N_spam,datapath=datapath)
 # keep dataset balanced
-raw_data = np.column_stack((raw_data,np.asarray(nigerian_prince.ix[:max_cells-1,:].sample(n=n_ham,replace=False,axis=1))))
-header.extend([['spam'],]*n_ham)
+raw_data = np.asarray(enron_data.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
+header = [['ham'],]*N
+raw_data = np.column_stack((raw_data,np.asarray(nigerian_prince.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
+header.extend([['spam'],]*N_spam)
 
 print("DEBUG::final labeled data shape:")
 print(raw_data.shape)

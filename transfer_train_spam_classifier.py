@@ -13,7 +13,7 @@ from Simon.LengthStandardizer import *
 # extract the first N samples from jsonl
 def LoadJSONLEmails(N=10000000,datapath=None):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-    with open(datapath) as data_file:
+    with open(filename) as data_file:
         data_JSONL_lines = data_file.readlines()
     # visualize body extraction for first email
     idx = 0
@@ -35,7 +35,7 @@ def LoadJSONLEmails(N=10000000,datapath=None):
         all_email_df = pd.concat([all_email_df,pd.DataFrame(sample_email_sentence,columns=['Email '+str(idx)])],axis=1)
         if idx>=N-1:
             break
-
+    
     return pd.DataFrame.from_records(DataLengthStandardizerRaw(all_email_df,max_cells))
 
 
@@ -69,28 +69,20 @@ spam = LoadJSONLEmails(N=N_spam,datapath=datapath)
 # keep dataset approximately balanced
 raw_data = np.asarray(enron_data.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
 header = [['friend'],]*N
-print(raw_data.shape)
 # raw_data = np.column_stack((raw_data,np.asarray(falsepositives.ix[:max_cells-1,:].sample(n=N_fp,replace=True,axis=1))))
 # header.extend([['friend'],]*N_fp)
 raw_data = np.column_stack((raw_data,np.asarray(nigerian_prince.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
 header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
 raw_data = np.column_stack((raw_data,np.asarray(malware.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
 header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
 raw_data = np.column_stack((raw_data,np.asarray(credphishing.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
 header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
-print(phishtraining.shape)
 raw_data = np.column_stack((raw_data,np.asarray(phishtraining.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
 header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
 raw_data = np.column_stack((raw_data,np.asarray(propaganda.ix[:max_cells-1,:].sample(n=N_spam,replace=True,axis=1))))
 header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
 raw_data = np.column_stack((raw_data,np.asarray(socialeng.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
 header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
 raw_data = np.column_stack((raw_data,np.asarray(spam.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
 header.extend([['foe'],]*N_spam)
 
@@ -100,7 +92,7 @@ print(raw_data)
 
 
 # transpose the data, make everything lower case string
-mini_batch = 1000 # because of some memory issues, the next step needs to be done in stages
+mini_batch = 100 # because of some memory issues, the next step needs to be done in stages
 start = time.time()
 tmp = np.char.lower(np.transpose(raw_data[:,:mini_batch]).astype('U'))
 tmp_header = header[:mini_batch]
@@ -119,56 +111,64 @@ end = time.time()
 print("Time for casting data as lower case string is %f sec"%(end-start))
 raw_data = tmp
 
-# set up appropriate data encoder
+# load checkpoint (encoder with categories, weights)
+checkpoint_dir = "saved_checkpoints/01162019_best/"
+config = Simon({}).load_config('text-class.18-0.08.pkl',checkpoint_dir)
+encoder = config['encoder']
+checkpoint = config['checkpoint']
 Categories = ['friend','foe']
-encoder = Encoder(categories=Categories)
-encoder.process(raw_data, max_cells)
-# encode the data 
+encoder.categories=Categories
+    
+# build classifier model    
+Classifier = Simon(encoder=encoder) # text classifier for unit test    
+model = Classifier.generate_transfer_model(maxlen, max_cells, category_count, category_count, checkpoint, checkpoint_dir)
+
+model_compile = lambda m: m.compile(loss='categorical_crossentropy',
+                optimizer='adam', metrics=['binary_accuracy'])
+model_compile(model)
+    
+# encode the data and evaluate model
 X, y = encoder.encode_data(raw_data, header, maxlen)
-# setup classifier, compile model appropriately
-Classifier = Simon(encoder=encoder)
+
 data = Classifier.setup_test_sets(X, y)
-model = Classifier.generate_model(maxlen, max_cells, 2,activation='softmax')
-model.compile(loss='categorical_crossentropy',optimizer='adam', metrics=['binary_accuracy'])
-# train model
-batch_size = 64
-nb_epoch = 20
-checkpoint_dir = "checkpoints/"
-if not os.path.isdir(checkpoint_dir):
-    os.makedirs(checkpoint_dir)
+
+max_cells = encoder.cur_max_cells
+
 start = time.time()
 history = Classifier.train_model(batch_size, checkpoint_dir, model, nb_epoch, data)
 end = time.time()
 print("Time for training is %f sec"%(end-start))
+
 config = { 'encoder' :  encoder,
             'checkpoint' : Classifier.get_best_checkpoint(checkpoint_dir) }
 Classifier.save_config(config, checkpoint_dir)
-Classifier.plot_loss(history)
+Classifier.plot_loss(history) #comment out on docker images...
+    
 Classifier.evaluate_model(max_cells, model, data, encoder, p_threshold)
 
 # do p_threshold ROC tuning on the test data to see if you can improve it
-start = time.time()
-p_thresholds = np.linspace(0.01,0.99,num=20)
-TPR_arr,FPR_arr = Classifier.tune_ROC_metrics(max_cells, model, data, encoder,p_thresholds)
-print("DEBUG::True positive rate w.r.t p_threshold array:")
-print(TPR_arr)
-print("DEBUG::False positive rate w.r.t p_threshold array:")
-print(FPR_arr)
-# plot
-plt.figure()
-plt.subplot(311)
-plt.plot(p_thresholds,TPR_arr)
-plt.xlabel('p_threshold')
-plt.ylabel('TPR')
-plt.subplot(312)
-plt.xlabel('p_threshold')
-plt.ylabel('FPR')
-plt.plot(p_thresholds,FPR_arr)
-plt.subplot(313)
-plt.xlabel('FPR')
-plt.ylabel('TPR')
-plt.plot(FPR_arr,TPR_arr)
-plt.show()
-# timing info
-end = time.time()
-print("Time for hyperparameter (per-class threshold) is %f sec"%(end-start))
+# start = time.time()
+# p_thresholds = np.linspace(0.01,0.99,num=20)
+# TPR_arr,FPR_arr = Classifier.tune_ROC_metrics(max_cells, model, data, encoder,p_thresholds)
+# print("DEBUG::True positive rate w.r.t p_threshold array:")
+# print(TPR_arr)
+# print("DEBUG::False positive rate w.r.t p_threshold array:")
+# print(FPR_arr)
+# # plot
+# plt.figure()
+# plt.subplot(311)
+# plt.plot(p_thresholds,TPR_arr)
+# plt.xlabel('p_threshold')
+# plt.ylabel('TPR')
+# plt.subplot(312)
+# plt.xlabel('p_threshold')
+# plt.ylabel('FPR')
+# plt.plot(p_thresholds,FPR_arr)
+# plt.subplot(313)
+# plt.xlabel('FPR')
+# plt.ylabel('TPR')
+# plt.plot(FPR_arr,TPR_arr)
+# plt.show()
+# # timing info
+# end = time.time()
+# print("Time for hyperparameter (per-class threshold) is %f sec"%(end-start))
