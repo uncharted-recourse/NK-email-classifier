@@ -1,1 +1,19 @@
-git+https://github.com/NewKnowledge/simon@ac82b2fcc8493efa445f2fffbb56b5e2edbee7fe
+setuptools
+ipykernel
+jupyter
+matplotlib
+numpy
+scipy>=0.19.0
+sklearn
+pandas>=0.19.2
+Pillow
+Keras>2.0.2,<=2.1.6
+tensorflow >=1.1.0,<=1.8.0
+faker>=0.7.7
+h5py >= 2.7.0
+dill
+kafka
+flask
+requests
+nltk
+git+https://github.com/NewKnowledge/simon@81abbf365a8bb0b4e73be1e0cbb715d1654bd15b

@@ -6,15 +6,18 @@ Assumptions in data labeling:
 
 2. enron emails are labeled as not spam
 
-Built on top of the New Knowledge character-level convolutional neural network text classification system - SIMON
+3. All JPL data abuse dataset emails are treated as foe - exceptions are FalsePositive and Recon which were dropped (former due to self-explanatory, and latter due to "lack of full understanding" reasons). Unknown was dropped as well.
 
-To setup:
-`pip3.6 install -r requirements.txt`
+Built on top of the New Knowledge character-level convolutional neural network text classification system - SIMON:
 
-To run, simply do
-`python3.6 train_spam_classifier.py`
+https://github.com/NewKnowledge/simon
 
-This assumes that you have already extracted enron and 419 emails using `preprocess-enron_kaggle.py` and 
-`preprocess_nigerian_prince.py`, and pointed `train_spam_classifier.py` to the appropriate locations.
 
-More documentation will be provided shortly...
+To build docker image:
+`sudo docker build -t nk-email-classifier:latest .`
+
+To run docker image, simply do
+`sudo docker run -it -p 5000:5000 nk-email-classifier:latest`
+
+Finally, edit `clientRestScriptExample.py` to fetch jsonl email of interest, and then run that scripts as
+`python3 clientRestScriptExample.py`
