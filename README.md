@@ -21,3 +21,5 @@ To run docker image, simply do
 
 Finally, edit `clientRestScriptExample.py` to fetch jsonl email of interest, and then run that scripts as
 `python3 clientRestScriptExample.py`
+
+Batch classification capabilities will be added next.
