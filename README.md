@@ -1,4 +1,4 @@
-# New Knowledge's spam classifier files
+# New Knowledge's Semantic Email Classifier
 
 Assumptions in data labeling:
 
