@@ -38,9 +38,9 @@ class SimonRestListener:
 
         DEBUG = True # boolean to specify whether or not print DEBUG information
 
-        checkpoint_dir = "/clusterfiles/saved_checkpoints/02122019/"
-
         tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+
+        checkpoint_dir = "/clusterfiles/deployed_checkpoints/"
         
         print("DEBUG::sample email (whole, then tokenized into sentences):")
         print(sample_email)

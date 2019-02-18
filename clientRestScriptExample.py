@@ -8,13 +8,13 @@ from json import JSONDecoder
 
 
 # Load sample email to be classified
-# filename = "/home/azunre/Downloads/jpl-abuse-jsonl/PhishTraining.jsonl"
+filename = "/home/azunre/Downloads/jpl-abuse-jsonl/PhishTraining.jsonl"
 # filename = "/home/azunre/Downloads/jpl-abuse-jsonl/Propaganda.jsonl"
-filename = "/home/azunre/Downloads/enron.jsonl"
+# filename = "/home/azunre/Downloads/enron.jsonl"
 # filename = "/home/azunre/Downloads/nigerian.jsonl"
 with open(filename) as data_file:
     data_JSONL_lines = data_file.readlines()
-idx = 3000
+idx = 47
 sample_email = json.loads(data_JSONL_lines[idx])["body"]
 print("DEBUG::sample email:")
 print(sample_email)        

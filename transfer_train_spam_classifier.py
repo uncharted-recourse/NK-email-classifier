@@ -1,10 +1,11 @@
 import time
+import json
 import os.path
+import nltk.data
 import numpy as np
 import pandas as pd
+import configparser
 from matplotlib import pyplot as plt
-import json
-import nltk.data
 from Simon import Simon 
 from Simon.Encoder import Encoder
 from Simon.DataGenerator import DataGenerator
@@ -72,19 +73,19 @@ header = [['friend'],]*N
 # raw_data = np.column_stack((raw_data,np.asarray(falsepositives.ix[:max_cells-1,:].sample(n=N_fp,replace=True,axis=1))))
 # header.extend([['friend'],]*N_fp)
 raw_data = np.column_stack((raw_data,np.asarray(nigerian_prince.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
+header.extend([['419_scam'],]*N_spam)
 raw_data = np.column_stack((raw_data,np.asarray(malware.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
+header.extend([['malware'],]*N_spam)
 raw_data = np.column_stack((raw_data,np.asarray(credphishing.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
+header.extend([['credphishing'],]*N_spam)
 raw_data = np.column_stack((raw_data,np.asarray(phishtraining.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
+header.extend([['phishtraining'],]*N_spam)
 raw_data = np.column_stack((raw_data,np.asarray(propaganda.ix[:max_cells-1,:].sample(n=N_spam,replace=True,axis=1))))
-header.extend([['foe'],]*N_spam)
+header.extend([['propaganda'],]*N_spam)
 raw_data = np.column_stack((raw_data,np.asarray(socialeng.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
+header.extend([['socialeng'],]*N_spam)
 raw_data = np.column_stack((raw_data,np.asarray(spam.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
+header.extend([['spam'],]*N_spam)
 
 print("DEBUG::final labeled data shape:")
 print(raw_data.shape)
@@ -112,20 +113,34 @@ print("Time for casting data as lower case string is %f sec"%(end-start))
 raw_data = tmp
 
 # load checkpoint (encoder with categories, weights)
-checkpoint_dir = "saved_checkpoints/01162019_best/"
-config = Simon({}).load_config('text-class.18-0.08.pkl',checkpoint_dir)
+config = configparser.ConfigParser()
+config.read('config.ini')
+modelName = config['DEFAULT']['modelName']
+Categories = ['friend','419_scam','malware','credphishing','phishtraining','propaganda','socialeng','spam']
+checkpoint_dir = "deployed_checkpoints/"
+config = Simon({}).load_config(modelName,checkpoint_dir)
 encoder = config['encoder']
 checkpoint = config['checkpoint']
-Categories = ['friend','foe']
 encoder.categories=Categories
+category_count = len(Categories)
+# print some debug info
+print("DEBUG::Categories:")
+print(encoder.categories)
     
 # build classifier model    
 Classifier = Simon(encoder=encoder) # text classifier for unit test    
-model = Classifier.generate_transfer_model(maxlen, max_cells, category_count, category_count, checkpoint, checkpoint_dir)
+model = Classifier.generate_transfer_model(maxlen, max_cells, 2, category_count, checkpoint, checkpoint_dir, activation='softmax')
 
 model_compile = lambda m: m.compile(loss='categorical_crossentropy',
                 optimizer='adam', metrics=['binary_accuracy'])
 model_compile(model)
+
+# print all layers to make sure it is right
+print("DEBUG::total number of layers:")
+print(len(model.layers))
+print("DEBUG::They are:")
+for layer in model.layers
+    print(layer)
     
 # encode the data and evaluate model
 X, y = encoder.encode_data(raw_data, header, maxlen)
@@ -147,28 +162,28 @@ Classifier.plot_loss(history) #comment out on docker images...
 Classifier.evaluate_model(max_cells, model, data, encoder, p_threshold)
 
 # do p_threshold ROC tuning on the test data to see if you can improve it
-# start = time.time()
-# p_thresholds = np.linspace(0.01,0.99,num=20)
-# TPR_arr,FPR_arr = Classifier.tune_ROC_metrics(max_cells, model, data, encoder,p_thresholds)
-# print("DEBUG::True positive rate w.r.t p_threshold array:")
-# print(TPR_arr)
-# print("DEBUG::False positive rate w.r.t p_threshold array:")
-# print(FPR_arr)
-# # plot
-# plt.figure()
-# plt.subplot(311)
-# plt.plot(p_thresholds,TPR_arr)
-# plt.xlabel('p_threshold')
-# plt.ylabel('TPR')
-# plt.subplot(312)
-# plt.xlabel('p_threshold')
-# plt.ylabel('FPR')
-# plt.plot(p_thresholds,FPR_arr)
-# plt.subplot(313)
-# plt.xlabel('FPR')
-# plt.ylabel('TPR')
-# plt.plot(FPR_arr,TPR_arr)
-# plt.show()
-# # timing info
-# end = time.time()
-# print("Time for hyperparameter (per-class threshold) is %f sec"%(end-start))
+start = time.time()
+p_thresholds = np.linspace(0.01,0.99,num=20)
+TPR_arr,FPR_arr = Classifier.tune_ROC_metrics(max_cells, model, data, encoder,p_thresholds)
+print("DEBUG::True positive rate w.r.t p_threshold array:")
+print(TPR_arr)
+print("DEBUG::False positive rate w.r.t p_threshold array:")
+print(FPR_arr)
+# plot
+plt.figure()
+plt.subplot(311)
+plt.plot(p_thresholds,TPR_arr)
+plt.xlabel('p_threshold')
+plt.ylabel('TPR')
+plt.subplot(312)
+plt.xlabel('p_threshold')
+plt.ylabel('FPR')
+plt.plot(p_thresholds,FPR_arr)
+plt.subplot(313)
+plt.xlabel('FPR')
+plt.ylabel('TPR')
+plt.plot(FPR_arr,TPR_arr)
+plt.show()
+# timing info
+end = time.time()
+print("Time for hyperparameter (per-class threshold) is %f sec"%(end-start))
