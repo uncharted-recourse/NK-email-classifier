@@ -144,7 +144,7 @@ print("DEBUG::They are:")
 for layer in model.layers:
     print(layer)
 print("DEBUG::model.summary() is:")
-print(model.summary)
+print(model.summary())
     
 # encode the data and evaluate model
 X, y = encoder.encode_data(raw_data, header, maxlen)
