@@ -14,7 +14,7 @@ from Simon.LengthStandardizer import *
 # extract the first N samples from jsonl
 def LoadJSONLEmails(N=10000000,datapath=None):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-    with open(filename) as data_file:
+    with open(datapath) as data_file:
         data_JSONL_lines = data_file.readlines()
     # visualize body extraction for first email
     idx = 0
@@ -44,6 +44,8 @@ def LoadJSONLEmails(N=10000000,datapath=None):
 maxlen = 200 # max length of each sentence
 max_cells = 100 # maximum number of sentences per email
 p_threshold = 0.5 # decision boundary
+batch_size = 64
+nb_epoch = 20
 
 # Extract enron/nigerian prince data from JSONL format
 N = 7000 # number of samples to draw
@@ -93,7 +95,7 @@ print(raw_data)
 
 
 # transpose the data, make everything lower case string
-mini_batch = 100 # because of some memory issues, the next step needs to be done in stages
+mini_batch = 1000 # because of some memory issues, the next step needs to be done in stages
 start = time.time()
 tmp = np.char.lower(np.transpose(raw_data[:,:mini_batch]).astype('U'))
 tmp_header = header[:mini_batch]
@@ -139,8 +141,10 @@ model_compile(model)
 print("DEBUG::total number of layers:")
 print(len(model.layers))
 print("DEBUG::They are:")
-for layer in model.layers
+for layer in model.layers:
     print(layer)
+print("DEBUG::model.summary() is:")
+print(model.summary)
     
 # encode the data and evaluate model
 X, y = encoder.encode_data(raw_data, header, maxlen)
