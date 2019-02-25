@@ -16,4 +16,7 @@ kafka
 flask
 requests
 nltk
+grpcio-tools
+flask
+click
 git+https://github.com/NewKnowledge/simon@81abbf365a8bb0b4e73be1e0cbb715d1654bd15b

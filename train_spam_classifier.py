@@ -1,4 +1,5 @@
 import time
+import random
 import os.path
 import numpy as np
 import pandas as pd
@@ -15,6 +16,7 @@ def LoadJSONLEmails(N=10000000,datapath=None):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
     with open(datapath) as data_file:
         data_JSONL_lines = data_file.readlines()
+    random.shuffle(data_JSONL_lines)
     # visualize body extraction for first email
     idx = 0
     sample_email = json.loads(data_JSONL_lines[idx])["body"]
@@ -44,7 +46,7 @@ maxlen = 200 # max length of each sentence
 max_cells = 100 # maximum number of sentences per email
 p_threshold = 0.5 # decision boundary
 
-# Extract enron/nigerian prince data from JSONL format
+# Extract enron/419 scam/JPL data from JSONL format
 N = 7000 # number of samples to draw
 datapath = "/home/azunre/Downloads/enron.jsonl"
 enron_data = LoadJSONLEmails(N=N,datapath=datapath)
