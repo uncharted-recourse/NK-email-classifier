@@ -7,11 +7,9 @@ from __future__ import print_function
 import logging
 
 import grpc
-
+import configparser
 import grapevine_pb2
 import grapevine_pb2_grpc
-
-GRPC_PORT = '50052'
 
 def run():
 
@@ -44,5 +42,11 @@ def run():
 
 
 if __name__ == '__main__':
-    logging.basicConfig()
+    logging.basicConfig() # purpose?
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    port_config = config['DEFAULT']['port_config']
+    print("using port " + port_config + " ...")
+    global GRPC_PORT
+    GRPC_PORT = port_config
     run()

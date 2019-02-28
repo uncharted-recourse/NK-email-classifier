@@ -22,7 +22,7 @@ Be sure to rebuild docker images, if using dockerized version of code, after mak
 
 The gRPC interface consists of the following components:
 *) `grapevine.proto` in `protos/` which generates `grapevine_pb2.py` and `grapevine_pb2_grpc.py` according to instructions in `protos/README.md` -- these have to be generated every time `grapevine.proto` is changed
-*) `spam_clf_server.py` which is the main gRPC server, serving on port `50052` (configurable at the top of that file)
+*) `spam_clf_server.py` which is the main gRPC server, serving on port `50052` (configurable via `config.ini`)
 *) `spam_clf_client.py` which is an example script demonstrating how the main gRPC server can be accessed to classify emails 
  
 To build corresponding docker image:

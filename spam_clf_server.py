@@ -30,11 +30,9 @@ from concurrent import futures
 
 
 # GLOBALS
-GRPC_PORT = '50052'
-
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
-# CLASS_MAP = {0: 'ham', 1: 'spam'} # purpose?
+DEBUG = True # boolean to specify whether or not print DEBUG information
 
 #-----
 class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
@@ -44,7 +42,7 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
 
         # init classifier result object
         result = grapevine_pb2.Classification(
-            domain='attack',
+            domain=DOMAIN_OBJECT,
             prediction='false',
             confidence=0.0,
             model="NK_email_classifer",
@@ -67,14 +65,13 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
         max_cells = 100 # maximum number of sentences per email
         p_threshold = 0.5 # decision boundary
 
-        DEBUG = True # boolean to specify whether or not print DEBUG information
-
         tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
 
         checkpoint_dir = "deployed_checkpoints/"
         
-        print("DEBUG::sample email (whole, then tokenized into sentences):")
-        print(sample_email)
+        if(DEBUG):
+            print("DEBUG::sample email (whole, then tokenized into sentences):")
+            print(sample_email)
         sample_email_sentence = tokenizer.tokenize(sample_email)
         sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] # truncate
         print(sample_email_sentence)
@@ -83,13 +80,14 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
         all_email_df = all_email_df.astype(str)
         all_email_df = pd.DataFrame.from_records(DataLengthStandardizerRaw(all_email_df,max_cells))
 
-        print("DEBUG::the final shape is:")
-        print(all_email_df.shape)
+        if(DEBUG):
+            print("DEBUG::the final shape is:")
+            print(all_email_df.shape)
 
         raw_data = np.asarray(all_email_df.ix[:max_cells-1,:]) #truncate to max_cells
         raw_data = np.char.lower(np.transpose(raw_data).astype('U'))
 
-        execution_config=modelName
+        execution_config=MODEL_OBJECT
 
         # load specified execution configuration
         if execution_config is None:
@@ -103,13 +101,16 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
 
         X = encoder.x_encode(raw_data,maxlen)
 
-        # orient the user a bit
-        print("DEBUG::CHECKPOINT:")
-        print(checkpoint)
+        
         Categories = encoder.categories
-        print("DEBUG::Categories:")
-        print(Categories)
         category_count = len(Categories)
+
+        # orient the user a bit
+        if(DEBUG):
+            print("DEBUG::CHECKPOINT:")
+            print(checkpoint)
+            print("DEBUG::Categories:")
+            print(Categories)
 
         model = Classifier.generate_model(maxlen, max_cells, category_count,activation='softmax')
         Classifier.load_weights(checkpoint,config,model,checkpoint_dir)
@@ -129,9 +130,8 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
         Classifier.clear_session()  # critical for enabling repeated calls of function
         
         if NK_email_result[0][0]: # empty edge case
-            if NK_email_result[0][0][0] != 'friend':
-                result.prediction = 'true'
-                result.confidence = NK_email_result[1][0][0]
+            result.prediction = NK_email_result[0][0][0]
+            result.confidence = NK_email_result[1][0][0]
 
         return result
 
@@ -157,4 +157,13 @@ if __name__ == '__main__':
     print("using model " + modelName + " ...")
     global MODEL_OBJECT
     MODEL_OBJECT = modelName
+    domain = config['DEFAULT']['domain']
+    print("using domain " + domain + " ...")
+    global DOMAIN_OBJECT
+    DOMAIN_OBJECT = domain
+    port_config = config['DEFAULT']['port_config']
+    print("using port " + port_config + " ...")
+    global GRPC_PORT
+    GRPC_PORT = port_config
+    
     serve()

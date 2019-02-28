@@ -18,5 +18,5 @@ requests
 nltk
 grpcio-tools
 flask
-click # has to be installed manually as `pip3 install click`, won't work through this requirements.txt file 
+click # must install manually - `pip3 install click`, won't work through requirements.txt file 
 git+https://github.com/NewKnowledge/simon@81abbf365a8bb0b4e73be1e0cbb715d1654bd15b
