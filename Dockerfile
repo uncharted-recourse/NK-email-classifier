@@ -36,7 +36,9 @@ COPY . ./clusterfiles
 
 RUN pip3 --no-cache-dir install -r ./clusterfiles/requirements.txt \
         && \
-    python3 -m ipykernel.kernelspec
+    python3 -m ipykernel.kernelspec \
+        && \
+    pip3 install click
 
 RUN python3 -m nltk.downloader punkt
 
@@ -73,7 +75,14 @@ ENV LC_ALL=C.UTF-8 \
 RUN echo $LC_ALL &&\
     echo $LANG
 
-RUN chmod +x start_flask.sh &&\
+RUN chmod +x start_flask.sh && \
     sync
 
-CMD ./start_flask.sh
+RUN chmod +x start_gRPC.sh && \
+    sync
+
+# this is the gRPC server command
+CMD ./start_gRPC.sh
+
+# this is the REST server command
+#CMD ./start_flask.sh

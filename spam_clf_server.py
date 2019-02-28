@@ -79,10 +79,12 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
         sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] # truncate
         print(sample_email_sentence)
         all_email_df = pd.DataFrame(sample_email_sentence,columns=['Email 0'])
-        print("DEBUG::the final shape is:")
-        print(all_email_df.shape)
+        
         all_email_df = all_email_df.astype(str)
         all_email_df = pd.DataFrame.from_records(DataLengthStandardizerRaw(all_email_df,max_cells))
+
+        print("DEBUG::the final shape is:")
+        print(all_email_df.shape)
 
         raw_data = np.asarray(all_email_df.ix[:max_cells-1,:]) #truncate to max_cells
         raw_data = np.char.lower(np.transpose(raw_data).astype('U'))
@@ -126,9 +128,10 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
         
         Classifier.clear_session()  # critical for enabling repeated calls of function
         
-        if NK_email_result[0][0][0] != 'friend':
-            result.prediction = 'true'
-            result.confidence = NK_email_result[1][0][0]
+        if NK_email_result[0][0]: # empty edge case
+            if NK_email_result[0][0][0] != 'friend':
+                result.prediction = 'true'
+                result.confidence = NK_email_result[1][0][0]
 
         return result
 

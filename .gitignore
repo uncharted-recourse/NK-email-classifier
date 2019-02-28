@@ -107,5 +107,5 @@ venv.bak/
 checkpoints/
 data/
 logs/
-unencoded_chars.json
+#unencoded_chars.json
 saved_checkpoints/
