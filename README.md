@@ -12,7 +12,11 @@ Built on top of the New Knowledge character-level convolutional neural network t
 
 https://github.com/NewKnowledge/simon
 
+# Switching Binary and Multiclass Classifiers
+
 You can swap out the multiclass multilabel model (enabled by default) for the binary model by modifying `config.ini` as specified in `deployed_checkpoints/checkpoint_descriptions.txt`
+
+Be sure to rebuild docker images, if using dockerized version of code, after making this edit.
 
 # gRPC Dockerized Classifier
 
