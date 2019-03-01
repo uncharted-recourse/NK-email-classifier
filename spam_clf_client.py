@@ -30,13 +30,13 @@ def run():
     ### This should be classified as HAM
     classification = stub.Classify(testMessageHAM)
     confidence = classification.confidence
-    print("Classifier gRPC client received this classifier score for HAM example: " + str(confidence) + "\n\n")
+    print("Classifier gRPC client received this classifier score for HAM example (class/confidence): " + str(classification.prediction)+ "/" + str(confidence) + "\n\n")
 
     
     ### This should be classified as SPAM
     classification = stub.Classify(testMessageSPAM)
     confidence = classification.confidence
-    print("Classifier gRPC client received this classifier score for SPAM example: " + str(confidence) + "\n\n")    
+    print("Classifier gRPC client received this classifier score for SPAM example (class/confidence): " + str(classification.prediction) + "/" + str(confidence) + "\n\n")    
 
 
 
