@@ -47,7 +47,7 @@ maxlen = 200 # max length of each sentence
 max_cells = 100 # maximum number of sentences per email
 p_threshold = 0.5 # decision boundary
 batch_size = 64
-nb_epoch = 20
+nb_epoch = 40
 
 # Extract enron/419 scam/JPL abuse data from JSONL format
 N = 7000 # number of samples to draw
@@ -133,9 +133,9 @@ print(encoder.categories)
     
 # build classifier model    
 Classifier = Simon(encoder=encoder) # text classifier for unit test    
-model = Classifier.generate_transfer_model(maxlen, max_cells, 2, category_count, checkpoint, checkpoint_dir, activation='softmax')
+model = Classifier.generate_transfer_model(maxlen, max_cells, 2, category_count, checkpoint, checkpoint_dir, activation='sigmoid')
 
-model_compile = lambda m: m.compile(loss='categorical_crossentropy',
+model_compile = lambda m: m.compile(loss='binary_crossentropy',
                 optimizer='adam', metrics=['binary_accuracy'])
 model_compile(model)
 

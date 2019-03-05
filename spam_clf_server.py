@@ -130,8 +130,13 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
         Classifier.clear_session()  # critical for enabling repeated calls of function
         
         if NK_email_result[0][0]: # empty edge case
-            result.prediction = NK_email_result[0][0][0]
-            result.confidence = NK_email_result[1][0][0]
+            if DOMAIN_OBJECT=='attack':
+                if NK_email_result[0][0][0] != 'friend':
+                    result.prediction = 'true'
+                    result.confidence = NK_email_result[1][0][0]
+            else:
+                result.prediction = NK_email_result[0][0][0]
+                result.confidence = NK_email_result[1][0][0]
 
         return result
 
