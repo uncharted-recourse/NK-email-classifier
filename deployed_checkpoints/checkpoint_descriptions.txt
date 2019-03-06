@@ -1,8 +1,12 @@
 1. text-class.20-0.89.pkl - multilabel single class classifier, classes ->
-['friend', '419_scam', 'malware', 'credphishing', 'phishtraining', 'propaganda', 'socialeng', 'spam'] -- in this case, balanced between 'friend' (7000 samples) and all the possible attacks (1000 samples each) -- softmax/single-label multiclass
+['friend', '419_scam', 'malware', 'credphishing', 'phishtraining', 'propaganda', 'socialeng', 'spam'] -- in this case, balanced between 'friend' (7000 samples) and all the possible attacks (1000 samples each) -- softmax/single-label multi-class
 
 2. text-class.17-0.07.pkl - binary classifier ->
 ['friend', 'foe']
 
 3. text-class.38-1.54.pkl - multilabel single class classifier, classes ->
-['friend', '419_scam', 'malware', 'credphishing', 'phishtraining', 'propaganda', 'socialeng', 'spam'] -- in this case, all the data was balanced across all classes (2000 samples for every class) -- softmax/single-label multiclass
+['friend', '419_scam', 'malware', 'credphishing', 'phishtraining', 'propaganda', 'socialeng', 'spam'] -- in this case, all the data was balanced across all classes (2000 samples for every class) -- softmax/single-label multi-class
+
+4. text-class.40-0.18.pkl - multilabel single class classifier, classes ->
+['friend', '419_scam', 'malware', 'credphishing', 'phishtraining', 'propaganda', 'socialeng', 'spam'] -- in this case, balanced between 'friend' (7000 samples) and all the possible attacks (1000 samples each) -- sigmoid/multi-label multi-class
+
