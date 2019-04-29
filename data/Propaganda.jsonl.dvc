@@ -1,0 +1,8 @@
+md5: 789e56fa9b381b817ef84331b66f6d4f
+outs:
+- cache: true
+  md5: 847986e95ab007d19e897cf75e64f801
+  metric: false
+  path: data/Propaganda.jsonl
+  persist: false
+wdir: ..

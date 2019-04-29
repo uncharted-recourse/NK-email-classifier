@@ -1,0 +1,8 @@
+md5: 07ef90849cebe12926825c0d7f44b90f
+outs:
+- cache: true
+  md5: f63bfb2e4c23bce998bb0a547b8e74f1
+  metric: false
+  path: data/nigerian.jsonl
+  persist: false
+wdir: ..

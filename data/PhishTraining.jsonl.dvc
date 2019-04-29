@@ -1,0 +1,8 @@
+md5: 19f9a69dfb7fe296f561f208f349a351
+outs:
+- cache: true
+  md5: 5f5062dd7a2d5a6bf5a7f5cf9720dd0b
+  metric: false
+  path: data/PhishTraining.jsonl
+  persist: false
+wdir: ..
