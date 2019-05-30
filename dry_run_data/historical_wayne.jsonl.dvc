@@ -1,0 +1,8 @@
+md5: 2e329107b42fbcb0bdcce218f8b41574
+outs:
+- cache: true
+  md5: c15458c6045223d57a4d5dd3553128bb
+  metric: false
+  path: historical_wayne.jsonl
+  persist: false
+wdir: .
