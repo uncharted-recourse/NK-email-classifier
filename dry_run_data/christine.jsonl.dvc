@@ -1,0 +1,8 @@
+md5: b3ba61644fd9cdf73e820fe333bc6c7c
+outs:
+- cache: true
+  md5: 95df3e08f200f167bb86d4d93b8c5826
+  metric: false
+  path: dry_run_data/christine.jsonl
+  persist: false
+wdir: ..
