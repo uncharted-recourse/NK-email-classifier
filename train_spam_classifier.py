@@ -48,25 +48,25 @@ p_threshold = 0.5 # decision boundary
 
 # Extract enron/419 scam/JPL data from JSONL format
 N = 7000 # number of samples to draw
-datapath = "/home/azunre/Downloads/enron.jsonl"
+datapath = "data/enron.jsonl"
 enron_data = LoadJSONLEmails(N=N,datapath=datapath)
 # N_fp = 1000 # number of samples to draw
-# datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/FalsePositive.jsonl"
+# datapath = "data/FalsePositive.jsonl"
 # falsepositives = LoadJSONLEmails(N=N_fp,datapath=datapath)
 N_spam = 1000 # number of samples to draw
-datapath = "/home/azunre/Downloads/nigerian.jsonl"
+datapath = "data/nigerian.jsonl"
 nigerian_prince = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/Malware.jsonl"
+datapath = "data/Malware.jsonl"
 malware = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/CredPhishing.jsonl"
+datapath = "data/CredPhishing.jsonl"
 credphishing = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/PhishTraining.jsonl"
+datapath = "data/PhishTraining.jsonl"
 phishtraining = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/Propaganda.jsonl"
+datapath = "data/Propaganda.jsonl"
 propaganda = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/SocialEng.jsonl"
+datapath = "data/SocialEng.jsonl"
 socialeng = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/Spam.jsonl"
+datapath = "data/Spam.jsonl"
 spam = LoadJSONLEmails(N=N_spam,datapath=datapath)
 # keep dataset approximately balanced
 raw_data = np.asarray(enron_data.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
