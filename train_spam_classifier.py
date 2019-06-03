@@ -22,16 +22,21 @@ def LoadJSONLEmails(N=10000000,datapath=None):
     sample_email = json.loads(data_JSONL_lines[idx])["body"]
     print("DEBUG::the current email type being loaded:")
     print(datapath)
-    print("DEBUG::sample email (whole, then tokenized into sentences):")
-    print(sample_email)
+    #print("DEBUG::sample email (whole, then tokenized into sentences):")
+    #print(sample_email)
     sample_email_sentence = tokenizer.tokenize(sample_email)
     sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] # truncate
-    print(sample_email_sentence)
+    #print(sample_email_sentence)
     all_email_df = pd.DataFrame(sample_email_sentence,columns=['Email 0'])
     # now, build up pandas dataframe of appropriate format for NK email classifier
     for line in data_JSONL_lines:
+        print(idx)
         idx = idx+1
-        sample_email = json.loads(line)["body"]
+        sample_email = ''
+        content = json.loads(line)
+        for url in content["urls"]:
+            sample_email += url + ' '
+        sample_email += content["body"]
         sample_email_sentence = tokenizer.tokenize(sample_email)
         sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] #truncate
         all_email_df = pd.concat([all_email_df,pd.DataFrame(sample_email_sentence,columns=['Email '+str(idx)])],axis=1)
@@ -121,6 +126,13 @@ end = time.time()
 print("Time for casting data as lower case string is %f sec"%(end-start))
 raw_data = tmp
 
+# save data for future experiments
+f = open('raw_data.txt', 'wb')
+np.save(f, raw_data)
+
+# load data 
+#raw_data = np.load(outfile, allow_pickle=True)
+
 # set up appropriate data encoder
 Categories = ['friend','foe']
 encoder = Encoder(categories=Categories)
@@ -148,6 +160,15 @@ Classifier.save_config(config, checkpoint_dir)
 Classifier.plot_loss(history)
 Classifier.evaluate_model(max_cells, model, data, encoder, p_threshold)
 
+# write evaluation metrics to file for comparison
+if not os.path.exists('experiment_metrics.txt'):
+     file = open('experiment_metrics.txt', 'w')
+     file.close()
+file.open('experiment_metrics.txt', 'a')
+file.write("baseline classifier with urls: %0.3f\n" % (history.history['val_binary_accuracy']))
+file.flush()
+file.close()
+'''
 # do p_threshold ROC tuning on the test data to see if you can improve it
 start = time.time()
 p_thresholds = np.linspace(0.01,0.99,num=20)
@@ -174,3 +195,4 @@ plt.show()
 # timing info
 end = time.time()
 print("Time for hyperparameter (per-class threshold) is %f sec"%(end-start))
+'''
