@@ -127,12 +127,14 @@ print("Time for casting data as lower case string is %f sec"%(end-start))
 raw_data = tmp
 
 # save data for future experiments
-f = open('raw_data.txt', 'wb')
+f = open('raw_data', 'wb')
 np.save(f, raw_data)
+f = open('header', 'wb')
+np.save(f, header)
 
 # load data 
-#raw_data = np.load(outfile, allow_pickle=True)
-
+#raw_data = np.load('raw_data.npy', allow_pickle=True)
+#raw_data = np.load('header.npy', allow_pickle=True)
 # set up appropriate data encoder
 Categories = ['friend','foe']
 encoder = Encoder(categories=Categories)
