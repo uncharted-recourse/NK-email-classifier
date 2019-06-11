@@ -70,7 +70,7 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
             prediction='false',
             confidence=0.0,
             model=CLF_NAME,
-            version="0.0.3",
+            version="0.0.7",
             meta=grapevine_pb2.Meta(),
         )
 
