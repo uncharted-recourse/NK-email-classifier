@@ -1,0 +1,8 @@
+md5: 491e964c579911a98258a53ec787c18c
+outs:
+- cache: true
+  md5: 309d2ee9b786b0afb76ecb45fcc4fdbe
+  metric: false
+  path: dry_run_data/wayne.jsonl
+  persist: false
+wdir: ..

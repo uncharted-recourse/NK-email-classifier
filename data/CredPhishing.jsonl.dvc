@@ -1,0 +1,8 @@
+md5: 94059403400bbf3b7bd92ae0ce81fd4e
+outs:
+- cache: true
+  md5: 60d73f06416f6a2be8b6868aa3fcb6d5
+  metric: false
+  path: data/CredPhishing.jsonl
+  persist: false
+wdir: ..

@@ -19,4 +19,4 @@ nltk
 grpcio-tools
 flask
 click # must install manually - `pip3 install click`, won't work through requirements.txt file 
-git+https://github.com/NewKnowledge/simon@81abbf365a8bb0b4e73be1e0cbb715d1654bd15b
+git+https://github.com/NewKnowledge/simon@1574fea55a047fe94261b4fde1c93feb622778db # Simon attention model

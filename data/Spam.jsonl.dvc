@@ -1,0 +1,8 @@
+md5: e423f1cadacb1853da6b693a416bff88
+outs:
+- cache: true
+  md5: adb6cbefc8f914004a2f0bc36f01ef5a
+  metric: false
+  path: data/Spam.jsonl
+  persist: false
+wdir: ..

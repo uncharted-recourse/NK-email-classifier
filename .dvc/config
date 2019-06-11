@@ -1,0 +1,8 @@
+['remote "s3remote"']
+url = s3://nk-data-science/simon-email-classifier
+[core]
+remote = s3remote_dry_run
+['remote "s3remote_base"']
+url = s3://nk-data-science/simon-email-classifier
+['remote "s3remote_dry_run"']
+url = s3://nk-data-science/ASED_dry_run_timeseries

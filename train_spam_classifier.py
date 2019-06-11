@@ -22,16 +22,21 @@ def LoadJSONLEmails(N=10000000,datapath=None):
     sample_email = json.loads(data_JSONL_lines[idx])["body"]
     print("DEBUG::the current email type being loaded:")
     print(datapath)
-    print("DEBUG::sample email (whole, then tokenized into sentences):")
-    print(sample_email)
+    #print("DEBUG::sample email (whole, then tokenized into sentences):")
+    #print(sample_email)
     sample_email_sentence = tokenizer.tokenize(sample_email)
     sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] # truncate
-    print(sample_email_sentence)
+    #print(sample_email_sentence)
     all_email_df = pd.DataFrame(sample_email_sentence,columns=['Email 0'])
     # now, build up pandas dataframe of appropriate format for NK email classifier
     for line in data_JSONL_lines:
+        print(idx)
         idx = idx+1
-        sample_email = json.loads(line)["body"]
+        sample_email = ''
+        content = json.loads(line)
+        for url in content["urls"]:
+            sample_email += url + ' '
+        sample_email += content["body"]
         sample_email_sentence = tokenizer.tokenize(sample_email)
         sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] #truncate
         all_email_df = pd.concat([all_email_df,pd.DataFrame(sample_email_sentence,columns=['Email '+str(idx)])],axis=1)
@@ -48,25 +53,25 @@ p_threshold = 0.5 # decision boundary
 
 # Extract enron/419 scam/JPL data from JSONL format
 N = 7000 # number of samples to draw
-datapath = "/home/azunre/Downloads/enron.jsonl"
+datapath = "data/enron.jsonl"
 enron_data = LoadJSONLEmails(N=N,datapath=datapath)
 # N_fp = 1000 # number of samples to draw
-# datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/FalsePositive.jsonl"
+# datapath = "data/FalsePositive.jsonl"
 # falsepositives = LoadJSONLEmails(N=N_fp,datapath=datapath)
 N_spam = 1000 # number of samples to draw
-datapath = "/home/azunre/Downloads/nigerian.jsonl"
+datapath = "data/nigerian.jsonl"
 nigerian_prince = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/Malware.jsonl"
+datapath = "data/Malware.jsonl"
 malware = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/CredPhishing.jsonl"
+datapath = "data/CredPhishing.jsonl"
 credphishing = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/PhishTraining.jsonl"
+datapath = "data/PhishTraining.jsonl"
 phishtraining = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/Propaganda.jsonl"
+datapath = "data/Propaganda.jsonl"
 propaganda = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/SocialEng.jsonl"
+datapath = "data/SocialEng.jsonl"
 socialeng = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/Spam.jsonl"
+datapath = "data/Spam.jsonl"
 spam = LoadJSONLEmails(N=N_spam,datapath=datapath)
 # keep dataset approximately balanced
 raw_data = np.asarray(enron_data.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
@@ -121,6 +126,15 @@ end = time.time()
 print("Time for casting data as lower case string is %f sec"%(end-start))
 raw_data = tmp
 
+# save data for future experiments
+f = open('raw_data', 'wb')
+np.save(f, raw_data)
+f = open('header', 'wb')
+np.save(f, header)
+
+# load data 
+#raw_data = np.load('raw_data.npy', allow_pickle=True)
+#raw_data = np.load('header.npy', allow_pickle=True)
 # set up appropriate data encoder
 Categories = ['friend','foe']
 encoder = Encoder(categories=Categories)
@@ -148,6 +162,15 @@ Classifier.save_config(config, checkpoint_dir)
 Classifier.plot_loss(history)
 Classifier.evaluate_model(max_cells, model, data, encoder, p_threshold)
 
+# write evaluation metrics to file for comparison
+if not os.path.exists('experiment_metrics.txt'):
+     file = open('experiment_metrics.txt', 'w')
+     file.close()
+file.open('experiment_metrics.txt', 'a')
+file.write("baseline classifier with urls: %0.3f\n" % (history.history['val_binary_accuracy']))
+file.flush()
+file.close()
+'''
 # do p_threshold ROC tuning on the test data to see if you can improve it
 start = time.time()
 p_thresholds = np.linspace(0.01,0.99,num=20)
@@ -174,3 +197,4 @@ plt.show()
 # timing info
 end = time.time()
 print("Time for hyperparameter (per-class threshold) is %f sec"%(end-start))
+'''

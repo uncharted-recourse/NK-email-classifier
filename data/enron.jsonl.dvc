@@ -1,0 +1,8 @@
+md5: 7b311d96b49f216647194b66b8e6d11c
+outs:
+- cache: true
+  md5: 58e131ec133326d29d59e43cb66c410f
+  metric: false
+  path: data/enron.jsonl
+  persist: false
+wdir: ..

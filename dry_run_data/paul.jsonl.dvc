@@ -1,0 +1,8 @@
+md5: 104858bbd4b3e32e499623201240785c
+outs:
+- cache: true
+  md5: 8bc095daf7b055a66947b97677b64245
+  metric: false
+  path: dry_run_data/paul.jsonl
+  persist: false
+wdir: ..

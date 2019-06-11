@@ -1,0 +1,8 @@
+md5: 567779fce0fb92c8f3ed510d0a43d5f0
+outs:
+- cache: true
+  md5: 2155cc8b506411e16ce0cdd9046e83a2
+  metric: false
+  path: dry_run_data/chris.jsonl
+  persist: false
+wdir: ..

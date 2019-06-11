@@ -1,17 +1,17 @@
 import time
-import json
 import random
 import os.path
-import nltk.data
 import numpy as np
 import pandas as pd
-import configparser
 from matplotlib import pyplot as plt
+import json
+import nltk.data
 from Simon import Simon 
 from Simon.Encoder import Encoder
 from Simon.DataGenerator import DataGenerator
 from Simon.LengthStandardizer import *
 
+# parse dry run data
 # extract the first N samples from jsonl
 def LoadJSONLEmails(N=10000000,datapath=None):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
@@ -23,22 +23,27 @@ def LoadJSONLEmails(N=10000000,datapath=None):
     sample_email = json.loads(data_JSONL_lines[idx])["body"]
     print("DEBUG::the current email type being loaded:")
     print(datapath)
-    print("DEBUG::sample email (whole, then tokenized into sentences):")
-    print(sample_email)
+    #print("DEBUG::sample email (whole, then tokenized into sentences):")
+    #print(sample_email)
     sample_email_sentence = tokenizer.tokenize(sample_email)
     sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] # truncate
-    print(sample_email_sentence)
+    #print(sample_email_sentence)
     all_email_df = pd.DataFrame(sample_email_sentence,columns=['Email 0'])
     # now, build up pandas dataframe of appropriate format for NK email classifier
     for line in data_JSONL_lines:
+        print(idx)
         idx = idx+1
-        sample_email = json.loads(line)["body"]
+        sample_email = ''
+        content = json.loads(line)
+        for url in content["urls"]:
+            sample_email += url + ' '
+        sample_email += content["body"]
         sample_email_sentence = tokenizer.tokenize(sample_email)
         sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] #truncate
         all_email_df = pd.concat([all_email_df,pd.DataFrame(sample_email_sentence,columns=['Email '+str(idx)])],axis=1)
         if idx>=N-1:
             break
-    
+
     return pd.DataFrame.from_records(DataLengthStandardizerRaw(all_email_df,max_cells))
 
 # set important parameters
@@ -46,47 +51,38 @@ maxlen = 200 # max length of each sentence
 max_cells = 100 # maximum number of sentences per email
 p_threshold = 0.5 # decision boundary
 
-# Extract enron/nigerian prince data from JSONL format
-N = 7000 # number of samples to draw
-datapath = "/home/azunre/Downloads/enron.jsonl"
-enron_data = LoadJSONLEmails(N=N,datapath=datapath)
-# N_fp = 1000 # number of samples to draw
-# datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/FalsePositive.jsonl"
-# falsepositives = LoadJSONLEmails(N=N_fp,datapath=datapath)
-N_spam = 1000 # number of samples to draw
-datapath = "/home/azunre/Downloads/nigerian.jsonl"
-nigerian_prince = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/Malware.jsonl"
-malware = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/CredPhishing.jsonl"
-credphishing = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/PhishTraining.jsonl"
-phishtraining = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/Propaganda.jsonl"
-propaganda = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/SocialEng.jsonl"
-socialeng = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "/home/azunre/Downloads/jpl-abuse-jsonl/Spam.jsonl"
-spam = LoadJSONLEmails(N=N_spam,datapath=datapath)
+# Extract dry run data from jsonl format
+datapath = "dry_run_data/chris.jsonl"
+chris_data = LoadJSONLEmails(datapath=datapath)
+datapath = "dry_run_data/christine.jsonl"
+christine_data = LoadJSONLEmails(datapath=datapath)
+datapath = "dry_run_data/ian.jsonl"
+ian_data = LoadJSONLEmails(datapath=datapath)
+datapath = "dry_run_data/paul.jsonl"
+paul_data = LoadJSONLEmails(datapath=datapath)
+datapath = "dry_run_data/wayne.jsonl"
+wayne_data = LoadJSONLEmails(datapath=datapath)
+datapath = "dry_run_data/recourse-attacks.jsonl"
+attack_data = LoadJSONLEmails(datapath=datapath)
+
 # keep dataset approximately balanced
-raw_data = np.asarray(enron_data.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
-header = [['friend'],]*N
-# raw_data = np.column_stack((raw_data,np.asarray(falsepositives.ix[:max_cells-1,:].sample(n=N_fp,replace=True,axis=1))))
-# header.extend([['friend'],]*N_fp)
-raw_data = np.column_stack((raw_data,np.asarray(nigerian_prince.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['419_scam'],]*N_spam)
-raw_data = np.column_stack((raw_data,np.asarray(malware.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['malware'],]*N_spam)
-raw_data = np.column_stack((raw_data,np.asarray(credphishing.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['credphishing'],]*N_spam)
-raw_data = np.column_stack((raw_data,np.asarray(phishtraining.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['phishtraining'],]*N_spam)
-raw_data = np.column_stack((raw_data,np.asarray(propaganda.ix[:max_cells-1,:].sample(n=N_spam,replace=True,axis=1))))
-header.extend([['propaganda'],]*N_spam)
-raw_data = np.column_stack((raw_data,np.asarray(socialeng.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['socialeng'],]*N_spam)
-raw_data = np.column_stack((raw_data,np.asarray(spam.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['spam'],]*N_spam)
+raw_data = np.asarray(chris_data.ix[:max_cells-1,:])
+header = [['friend'],]*chris_data.shape[0]
+print(raw_data.shape)
+raw_data = np.column_stack((raw_data,np.asarray(christine_data.ix[:max_cells-1,:])))
+header.extend([['friend'],]*christine_data.shape[0])
+print(raw_data.shape)
+raw_data = np.column_stack((raw_data,np.asarray(ian_data.ix[:max_cells-1,:])))
+header.extend([['friend'],]*ian_data.shape[0])
+print(raw_data.shape)
+raw_data = np.column_stack((raw_data,np.asarray(paul_data.ix[:max_cells-1,:])))
+header.extend([['friend'],]*paul_data.shape[0])
+print(raw_data.shape)
+raw_data = np.column_stack((raw_data,np.asarray(wayne_data.ix[:max_cells-1,:])))
+header.extend([['friend'],]*wayne_data.shape[0])
+print(raw_data.shape)
+raw_data = np.column_stack((raw_data,np.asarray(attack_data.ix[:max_cells-1,:])))
+header.extend([['foe'],]*attack_data.shape[0])
 
 print("DEBUG::final labeled data shape:")
 print(raw_data.shape)
@@ -112,10 +108,18 @@ end = time.time()
 print("Time for casting data as lower case string is %f sec"%(end-start))
 raw_data = tmp
 
+# save data for future experiments
+f = open('eval_raw_data.npy', 'wb')
+np.save(f, raw_data)
+f = open('eval_header.npy', 'wb')
+np.save(f, header)
+
+# load data 
+#raw_data = np.load('eval_raw_data.npy', allow_pickle=True)
+#header = np.load('eval_header.npy', allow_pickle=True)
+
 # load checkpoint (encoder with categories, weights)
-config = configparser.ConfigParser()
-config.read('config.ini')
-modelName = config['DEFAULT']['modelName']
+modelName = ''
 checkpoint_dir = "deployed_checkpoints/"
 config = Simon({}).load_config(modelName,checkpoint_dir)
 encoder = config['encoder']

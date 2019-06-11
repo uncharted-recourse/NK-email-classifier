@@ -69,8 +69,8 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
             domain=DOMAIN_OBJECT,
             prediction='false',
             confidence=0.0,
-            model="NK_email_classifer",
-            version="0.0.1",
+            model=CLF_NAME,
+            version="0.0.3",
             meta=grapevine_pb2.Meta(),
         )
 
@@ -161,6 +161,10 @@ if __name__ == '__main__':
     logging.basicConfig() # purpose?
     config = configparser.ConfigParser()
     config.read('config.ini')
+    clfName = config['DEFAULT']['clfName']
+    print("using clf name " + clfName + " ...")
+    global CLF_NAME
+    CLF_NAME = clfName
     modelName = config['DEFAULT']['modelName']
     print("using model " + modelName + " ...")
     global MODEL_OBJECT

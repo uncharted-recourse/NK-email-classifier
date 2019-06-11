@@ -1,0 +1,8 @@
+md5: 8ab6ddfa6b9f9913e2abd854758c496f
+outs:
+- cache: true
+  md5: 7b184a4f9e22a7f0218a6371a5b68860
+  metric: false
+  path: data/SocialEng.jsonl
+  persist: false
+wdir: ..
