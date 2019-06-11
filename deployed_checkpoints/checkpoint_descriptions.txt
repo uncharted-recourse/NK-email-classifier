@@ -1,3 +1,9 @@
+1. text-class.10-0.40.pkl - bianry classifier -> ['friend', 'foe'] -- originally trained on Enron / JPL-abuse, transfer-learned to historical dry run / JPL abuse
+
+2. text-class.10-0.25.pkl - multiclass classifier -> ['friend', '419_scam', 'malware', 'credphishing', 'phishtraining', 'propaganda', 'socialeng', 'spam'] -- originally trained on Enron / JPL-abuse, transfer-learned to historical dry run / JPL abuse
+
+Old deployed checkpoints:
+
 1. text-class.20-0.89.pkl - multilabel single class classifier, classes ->
 ['friend', '419_scam', 'malware', 'credphishing', 'phishtraining', 'propaganda', 'socialeng', 'spam'] -- in this case, balanced between 'friend' (7000 samples) and all the possible attacks (1000 samples each) -- softmax/single-label multi-class
 
