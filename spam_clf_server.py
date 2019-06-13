@@ -75,7 +75,10 @@ class NKEmailClassifier(grapevine_pb2_grpc.ClassifierServicer):
         )
 
         # get text from input message
-        input_doc = request.text
+        input_doc = ''
+        for url in request.urls:
+            input_doc+=url + ' '
+        input_doc += request.text
 
         # Exception cases
         if (len(input_doc.strip()) == 0) or (input_doc is None):
