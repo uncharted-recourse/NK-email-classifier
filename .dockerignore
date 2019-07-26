@@ -1,0 +1,38 @@
+# What should we not copy in to the container?
+
+# mount volumes for data storage instead
+checkpoints/
+data/
+prior_precossing_scripts/
+protos/
+
+# other files
+ClassifyJSONLEmail.py
+SimonRestListener.py
+clientRestScriptExample.py
+evaL_spam_classifier.py
+train_spam_classifier.py
+transfer_train_spam_classifier.py
+transfer_train_spam_classifier_multilabel.py
+unencoded_chars.json
+start_flask.sh
+
+scripts/__pycache__
+__pycache__/
+.dvc/
+.vscode/
+.keras/
+.ivy2/
+.cache/
+.config/
+.jupyter/
+.local/
+.pytest_cache/
+.ipython/
+.ipynb_checkpoints/
+
+.gitignore
+Dockerfile
+*.dockerfile
+Jenkinsfile
+
