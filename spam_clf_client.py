@@ -13,7 +13,7 @@ import grapevine_pb2_grpc
 
 def run():
 
-    channel = grpc.insecure_channel('http://127.0.0.1:5000/')#'localhost:' + GRPC_PORT)
+    channel = grpc.insecure_channel('localhost:' + GRPC_PORT)
     stub = grapevine_pb2_grpc.ClassifierStub(channel)
 
     testMessageHAM = grapevine_pb2.Message(

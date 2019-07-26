@@ -33,6 +33,10 @@ RUN curl -O https://bootstrap.pypa.io/get-pip.py && \
 
 # Set up our notebook config.
 COPY . ./clusterfiles
+COPY deployed_checkpoints/text-class.10-0.42.pkl ./clusterfiles/deployed_checkpoints/
+COPY deployed_checkpoints/text-class.10-0.42.hdf5 ./clusterfiles/deployed_checkpoints/
+COPY deployed_checkpoints/text-class.10-0.25.pkl ./clusterfiles/deployed_checkpoints/
+COPY deployed_checkpoints/text-class.10-0.25.hdf5 ./clusterfiles/deployed_checkpoints/
 
 RUN pip3 --no-cache-dir install -r ./clusterfiles/requirements.txt \
         && \
@@ -40,12 +44,12 @@ RUN pip3 --no-cache-dir install -r ./clusterfiles/requirements.txt \
         && \
     pip3 install click
 
-RUN python3 -m nltk.downloader punkt
-
+ENV NLTK_DATA=/usr/local/share/nltk_data
+RUN python3 -m nltk.downloader -d /usr/local/share/nltk_data punkt
    
 # matplotlib config (used by benchmark)
-RUN mkdir -p /root/.config/matplotlib
-RUN echo "backend : Agg" > /root/.config/matplotlib/matplotlibrc
+# RUN mkdir -p /root/.config/matplotlib
+# RUN echo "backend : Agg" > /root/.config/matplotlib/matplotlibrc
 
 # --- DO NOT EDIT OR DELETE BETWEEN THE LINES --- #
 # These lines will be edited automatically by parameterized_docker_build.sh. #
@@ -63,7 +67,6 @@ RUN echo "backend : Agg" > /root/.config/matplotlib/matplotlibrc
 RUN ls /opt #find / -name "libmsodbcsql*"
 
 
-
 # For CUDA profiling, TensorFlow requires CUPTI.
 ENV LD_LIBRARY_PATH /usr/local/cuda/extras/CUPTI/lib64:$LD_LIBRARY_PATH
 
@@ -75,8 +78,8 @@ ENV LC_ALL=C.UTF-8 \
 RUN echo $LC_ALL &&\
     echo $LANG
 
-RUN chmod +x start_flask.sh && \
-    sync
+# RUN chmod +x start_flask.sh && \
+#     sync
 
 RUN chmod +x start_gRPC.sh && \
     sync
