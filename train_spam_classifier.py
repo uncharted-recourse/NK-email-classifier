@@ -13,34 +13,17 @@ from Simon.LengthStandardizer import *
 from sklearn.utils.class_weight import compute_class_weight
 
 # extract the first N samples from jsonl
-def LoadJSONLEmails(N=10000000,datapath=None):
+def LoadJSONLEmails(datapath=None):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
     with open(datapath) as data_file:
         data_JSONL_lines = data_file.readlines()
-    random.shuffle(data_JSONL_lines)
-    idx = 0
     sample_email = json.loads(data_JSONL_lines[idx])["body"]
     print("DEBUG::the current email type being loaded:")
     print(datapath)
-    #print("DEBUG::sample email (whole, then tokenized into sentences):")
-    sample_email_sentence = tokenizer.tokenize(sample_email)
-    sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] # truncate
-    all_email_df = pd.DataFrame(sample_email_sentence,columns=['Email 0'])
-    # now, build up pandas dataframe of appropriate format for NK email classifier
-    for line in data_JSONL_lines:
-        print(idx)
-        idx = idx+1
-        sample_email = ''
-        content = json.loads(line)
-        for url in content["urls"]:
-            sample_email += url + ' '
-        sample_email += content["body"]
-        sample_email_sentence = tokenizer.tokenize(sample_email)
-        sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] #truncate
-        all_email_df = pd.concat([all_email_df,pd.DataFrame(sample_email_sentence,columns=['Email '+str(idx)])],axis=1)
-        if idx>=N-1:
-            break
-
+    content = [json.loads(line) for line in data_JSONL_lines]
+    content = [tokenizer.tokenize([u + ' ' for u in c['urls']].append(c['body'])[0]) for c in content]
+    content = [c[-maxlen:] for c in content]
+    all_email_df = pd.DataFrame(content).transpose()
     return pd.DataFrame.from_records(DataLengthStandardizerRaw(all_email_df,max_cells))
 
 # set important parameters
@@ -64,7 +47,7 @@ spam_datapaths = ["data/nigerian.jsonl",
                 "ta3-attacks/ta3-may-campaign.jsonl",
                 "ta3-attacks/ta3-june-campaign.jsonl",
                 "ta3-attacks/ta3-july-campaign.jsonl"]
-                
+
 ham_data = [np.asarray(LoadJSONLEmails(datapath=h).ix[:max_cells-1,:]) for h in ham_datapaths]
 spam_data = [np.asarray(LoadJSONLEmails(datapath=h).ix[:max_cells-1,:]) for h in spam_datapaths]
 raw_data_ham = np.column_stack(ham_data)
