@@ -10,6 +10,7 @@ from Simon import Simon
 from Simon.Encoder import Encoder
 from Simon.DataGenerator import DataGenerator
 from Simon.LengthStandardizer import *
+from sklearn.utils.class_weight import compute_class_weight
 
 # extract the first N samples from jsonl
 def LoadJSONLEmails(N=10000000,datapath=None):
@@ -17,16 +18,13 @@ def LoadJSONLEmails(N=10000000,datapath=None):
     with open(datapath) as data_file:
         data_JSONL_lines = data_file.readlines()
     random.shuffle(data_JSONL_lines)
-    # visualize body extraction for first email
     idx = 0
     sample_email = json.loads(data_JSONL_lines[idx])["body"]
     print("DEBUG::the current email type being loaded:")
     print(datapath)
     #print("DEBUG::sample email (whole, then tokenized into sentences):")
-    #print(sample_email)
     sample_email_sentence = tokenizer.tokenize(sample_email)
     sample_email_sentence = [elem[-maxlen:] for elem in sample_email_sentence] # truncate
-    #print(sample_email_sentence)
     all_email_df = pd.DataFrame(sample_email_sentence,columns=['Email 0'])
     # now, build up pandas dataframe of appropriate format for NK email classifier
     for line in data_JSONL_lines:
@@ -45,66 +43,39 @@ def LoadJSONLEmails(N=10000000,datapath=None):
 
     return pd.DataFrame.from_records(DataLengthStandardizerRaw(all_email_df,max_cells))
 
-
 # set important parameters
 maxlen = 200 # max length of each sentence
 max_cells = 100 # maximum number of sentences per email
 p_threshold = 0.5 # decision boundary
 
-# Extract enron/419 scam/JPL data from JSONL format
-N = 7000 # number of samples to draw
-datapath = "data/enron.jsonl"
-enron_data = LoadJSONLEmails(N=N,datapath=datapath)
-# N_fp = 1000 # number of samples to draw
-# datapath = "data/FalsePositive.jsonl"
-# falsepositives = LoadJSONLEmails(N=N_fp,datapath=datapath)
-N_spam = 1000 # number of samples to draw
-datapath = "data/nigerian.jsonl"
-nigerian_prince = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "data/Malware.jsonl"
-malware = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "data/CredPhishing.jsonl"
-credphishing = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "data/PhishTraining.jsonl"
-phishtraining = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "data/Propaganda.jsonl"
-propaganda = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "data/SocialEng.jsonl"
-socialeng = LoadJSONLEmails(N=N_spam,datapath=datapath)
-datapath = "data/Spam.jsonl"
-spam = LoadJSONLEmails(N=N_spam,datapath=datapath)
-# keep dataset approximately balanced
-raw_data = np.asarray(enron_data.sample(n=N,replace=False,axis=1).ix[:max_cells-1,:])
-header = [['friend'],]*N
-print(raw_data.shape)
-# raw_data = np.column_stack((raw_data,np.asarray(falsepositives.ix[:max_cells-1,:].sample(n=N_fp,replace=True,axis=1))))
-# header.extend([['friend'],]*N_fp)
-raw_data = np.column_stack((raw_data,np.asarray(nigerian_prince.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
-raw_data = np.column_stack((raw_data,np.asarray(malware.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
-raw_data = np.column_stack((raw_data,np.asarray(credphishing.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
-print(phishtraining.shape)
-raw_data = np.column_stack((raw_data,np.asarray(phishtraining.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
-raw_data = np.column_stack((raw_data,np.asarray(propaganda.ix[:max_cells-1,:].sample(n=N_spam,replace=True,axis=1))))
-header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
-raw_data = np.column_stack((raw_data,np.asarray(socialeng.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
-print(raw_data.shape)
-raw_data = np.column_stack((raw_data,np.asarray(spam.ix[:max_cells-1,:].sample(n=N_spam,replace=False,axis=1))))
-header.extend([['foe'],]*N_spam)
+ham_datapaths = ["data/enron.jsonl", 
+                "dry_run_data/historical_chris.jsonl",
+                "dry_run_data/historical_christine.jsonl",
+                "dry_run_data/historical_ian.jsonl",
+                "dry_run_data/historical_paul.jsonl",
+                "dry_run_data/historical_wayne.jsonl"]
+spam_datapaths = ["data/nigerian.jsonl",
+                "data/Malware.jsonl",
+                "data/CredPhishing.jsonl",
+                "data/PhishTraining.jsonl",
+                "data/Propaganda.jsonl",
+                "data/SocialEng.jsonl",
+                "data/Spam.jsonl",
+                "ta3-attacks/ta3-may-campaign.jsonl",
+                "ta3-attacks/ta3-june-campaign.jsonl",
+                "ta3-attacks/ta3-july-campaign.jsonl"]
+                
+ham_data = [np.asarray(LoadJSONLEmails(datapath=h).ix[:max_cells-1,:]) for h in ham_datapaths]
+spam_data = [np.asarray(LoadJSONLEmails(datapath=h).ix[:max_cells-1,:]) for h in spam_datapaths]
+raw_data_ham = np.column_stack(ham_data)
+raw_data_spam = np.column_stack(spam_data)
+header = [['friend'],] * raw_data_ham.shape[0]
+header.extend([['foe'],] * raw_data_spam.shape[0])
+raw_data = np.column_stack(raw_data_ham, raw_data_spam)
 
 print("DEBUG::final labeled data shape:")
 print(raw_data.shape)
 print(raw_data)
-
 
 # transpose the data, make everything lower case string
 mini_batch = 1000 # because of some memory issues, the next step needs to be done in stages
@@ -112,9 +83,6 @@ start = time.time()
 tmp = np.char.lower(np.transpose(raw_data[:,:mini_batch]).astype('U'))
 tmp_header = header[:mini_batch]
 for i in range(1,int(raw_data.shape[1]/mini_batch)):
-    print("DEBUG::current shape of loaded text (data,header)")
-    print(tmp.shape)
-    print(len(tmp_header))
     try:
         tmp = np.vstack((tmp,np.char.lower(np.transpose(raw_data[:,i*mini_batch:(i+1)*mini_batch]).astype('U'))))
         tmp_header.extend(header[i*mini_batch:(i+1)*mini_batch])
@@ -129,47 +97,39 @@ raw_data = tmp
 # save data for future experiments
 f = open('raw_data', 'wb')
 np.save(f, raw_data)
+f.close()
 f = open('header', 'wb')
 np.save(f, header)
+f.close()
 
 # load data 
 #raw_data = np.load('raw_data.npy', allow_pickle=True)
-#raw_data = np.load('header.npy', allow_pickle=True)
+#header = np.load('header.npy', allow_pickle=True)
+
 # set up appropriate data encoder
 Categories = ['friend','foe']
 encoder = Encoder(categories=Categories)
 encoder.process(raw_data, max_cells)
 # encode the data 
-X, y = encoder.encode_data(raw_data, header, maxlen)
+X, y, class_weights = encoder.encode_data(raw_data, header, maxlen)
 # setup classifier, compile model appropriately
 Classifier = Simon(encoder=encoder)
 data = Classifier.setup_test_sets(X, y)
 model = Classifier.generate_model(maxlen, max_cells, 2,activation='softmax')
 model.compile(loss='categorical_crossentropy',optimizer='adam', metrics=['binary_accuracy'])
 # train model
-batch_size = 64
-nb_epoch = 20
-checkpoint_dir = "checkpoints/"
+checkpoint_dir = "checkpoint_ta3_attack/"
 if not os.path.isdir(checkpoint_dir):
     os.makedirs(checkpoint_dir)
 start = time.time()
-history = Classifier.train_model(batch_size, checkpoint_dir, model, nb_epoch, data)
+history = Classifier.train_model(model, data, checkpoint_dir, class_weight=class_weights)
 end = time.time()
 print("Time for training is %f sec"%(end-start))
 config = { 'encoder' :  encoder,
             'checkpoint' : Classifier.get_best_checkpoint(checkpoint_dir) }
 Classifier.save_config(config, checkpoint_dir)
-Classifier.plot_loss(history)
-Classifier.evaluate_model(max_cells, model, data, encoder, p_threshold)
+Classifier.evaluate_model(max_cells, model, data, encoder, p_threshold, checkpoint_dir = checkpoint_dir)
 
-# write evaluation metrics to file for comparison
-if not os.path.exists('experiment_metrics.txt'):
-     file = open('experiment_metrics.txt', 'w')
-     file.close()
-file.open('experiment_metrics.txt', 'a')
-file.write("baseline classifier with urls: %0.3f\n" % (history.history['val_binary_accuracy']))
-file.flush()
-file.close()
 '''
 # do p_threshold ROC tuning on the test data to see if you can improve it
 start = time.time()
