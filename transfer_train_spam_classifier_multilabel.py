@@ -11,7 +11,7 @@ from Simon.Encoder import Encoder
 from Simon.DataGenerator import DataGenerator
 from Simon.LengthStandardizer import *
 
-def LoadJSONLEmails(N = 50000, datapath=None, annotation):
+def LoadJSONLEmails(N = 50000, datapath=None):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
     start = time.time()
     with open(datapath) as data_file:
@@ -48,15 +48,15 @@ def prepare_data(datapaths, labels):
         header.extend(labels)
     return raw_data, header
 
-def parse_ta3_attack_labels(csv_file, datapath, fill = ['gather_general_info'])
-
+def parse_ta3_attack_labels(csv_file, datapath, fill = ['gather_general_info']):
+    print(csv_file)
     # read in csv files containing subject and label information
     labels = pd.read_csv(csv_file)
     labels = labels[~labels['Motive'].isnull()]
     
     # create data structure linking subject to (multi) labels
     labels = labels.set_index('Scenario')
-    labels['labels'] = [[val for val in lst if str(val) != 'nan'] for lst in labels[['Motive', 'Unnamed: 2']].values]
+    labels['labels'] = [[val for val in lst if str(val) != 'nan'] for lst in labels.iloc[:,1:].values]
     labels_dict = labels.to_dict()['labels']
 
     # compare subject line of json to data structure
@@ -65,7 +65,7 @@ def parse_ta3_attack_labels(csv_file, datapath, fill = ['gather_general_info'])
         subject = json.loads(line)['subject']
         found = False
         for key, value in labels_dict.items():
-            if key in subject:
+            if key in subject or subject in key:
                 annotations.append(value)
                 found = True
                 break
@@ -89,17 +89,16 @@ ham_datapaths = ["data/enron.jsonl",
                 "dry_run_data/historical_wayne.jsonl"]
 malware = ["data/Malware.jsonl"]
 acquire_credentials = ["data/CredPhishing.jsonl"] # also gather_general_info
-access_social_network = ["data/SocialEng.jsonl"]] # also gather_general_info, build_trust
+access_social_network = ["data/SocialEng.jsonl"] # also gather_general_info, build_trust
 gather_general_info = ["data/PhishTraining.jsonl"]
 fear = ["data/Propaganda.jsonl"]
 annoy_recipient = ["data/Spam.jsonl"]
 may = ["ta3-attacks/ta3-may-campaign.jsonl"]
-june = ["ta3-attacks/ta3-may-campaign.jsonl"]
+june = ["ta3-attacks/ta3-june-campaign.jsonl"]
 july = ["ta3-attacks/ta3-july-campaign.jsonl"]
-may_annotations = parse_ta3_attack_labels("ta3-attacks/May_Campaign.csv", may, fill = ['gather_general_info', 'install_malware'])
-june_annotations = parse_ta3_attack_labels("ta3-attacks/June_Campaign.csv", june)
-july_annotations = parse_ta3_attack_labels("ta3-attacks/July_Campaign.csv", july)
-
+may_annotations = parse_ta3_attack_labels("ta3-attacks/May_Campaign.csv", may[0], fill = ['gather_general_info', 'install_malware'])
+june_annotations = parse_ta3_attack_labels("ta3-attacks/June_Campaign.csv", june[0])
+july_annotations = parse_ta3_attack_labels("ta3-attacks/July_Campaign.csv", july[0])
 header = []
 raw_data = None
 raw_data, header = prepare_data(ham_datapaths, ['friend'])
