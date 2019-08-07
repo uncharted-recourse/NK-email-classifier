@@ -11,19 +11,6 @@ from Simon.Encoder import Encoder
 from Simon.DataGenerator import DataGenerator
 from Simon.LengthStandardizer import *
 
-import time
-import random
-import os.path
-import numpy as np
-import pandas as pd
-from matplotlib import pyplot as plt
-import json
-import nltk.data
-from Simon import Simon 
-from Simon.Encoder import Encoder
-from Simon.DataGenerator import DataGenerator
-from Simon.LengthStandardizer import *
-
 def LoadJSONLEmails(N = 50000, datapath=None):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
     start = time.time()
