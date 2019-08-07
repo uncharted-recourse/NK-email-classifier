@@ -36,7 +36,7 @@ def LoadJSONLEmails(N = 50000, datapath=None):
     print('Parsing Loading {} took {} seconds'.format(datapath, time.time() - start))
     return np.transpose(lines)
 
-def prepare_data(datapaths, labels):
+def prepare_data(raw_data, header, datapaths, labels):
     if raw_data is None:
         data = np.column_stack([LoadJSONLEmails(datapath=p) for p in datapaths])
     else:
@@ -49,7 +49,7 @@ def prepare_data(datapaths, labels):
     return raw_data, header
 
 def parse_ta3_attack_labels(csv_file, datapath, fill = ['gather_general_info']):
-    print(csv_file)
+
     # read in csv files containing subject and label information
     labels = pd.read_csv(csv_file)
     labels = labels[~labels['Motive'].isnull()]
@@ -59,6 +59,17 @@ def parse_ta3_attack_labels(csv_file, datapath, fill = ['gather_general_info']):
     labels['labels'] = [[val for val in lst if str(val) != 'nan'] for lst in labels.iloc[:,1:].values]
     labels_dict = labels.to_dict()['labels']
 
+    # dictionary translating csv labels to model annotations
+    label_to_annotation = {'Install malware': 'install_malware', 
+        'Acquire credentials': 'acquire_credentials', 
+        'Acquire PII': 'acquire_pii', 
+        'Build trust': 'build_trust', 
+        'Gain access to social network': 'access_social_network', 
+        'Gather general information': 'gather_general_info', 
+        'Get Money': 'get_money', 
+        'Make appointment': 'access_social_network',
+    }
+
     # compare subject line of json to data structure
     annotations = []
     for idx, line in enumerate(open(datapath).readlines()):
@@ -66,12 +77,11 @@ def parse_ta3_attack_labels(csv_file, datapath, fill = ['gather_general_info']):
         found = False
         for key, value in labels_dict.items():
             if key in subject or subject in key:
-                annotations.append(value)
+                annotations.append(label_to_annotation(value))
                 found = True
                 break
         if not found:
             # log index, subject if nothing found in data structure
-            print('TA3 attack email {} with subject {} was not found in labels dictionary'.format(idx, subject))
             # fill with default values
             annotations.append(fill)
 
@@ -93,24 +103,25 @@ access_social_network = ["data/SocialEng.jsonl"] # also gather_general_info, bui
 gather_general_info = ["data/PhishTraining.jsonl"]
 fear = ["data/Propaganda.jsonl"]
 annoy_recipient = ["data/Spam.jsonl"]
-may = ["ta3-attacks/ta3-may-campaign.jsonl"]
-june = ["ta3-attacks/ta3-june-campaign.jsonl"]
-july = ["ta3-attacks/ta3-july-campaign.jsonl"]
+may_attacks = ["ta3-attacks/ta3-may-campaign.jsonl"]
+june_attacks = ["ta3-attacks/ta3-june-campaign.jsonl"]
+july_attacks = ["ta3-attacks/ta3-july-campaign.jsonl"]
 may_annotations = parse_ta3_attack_labels("ta3-attacks/May_Campaign.csv", may[0], fill = ['gather_general_info', 'install_malware'])
 june_annotations = parse_ta3_attack_labels("ta3-attacks/June_Campaign.csv", june[0])
 july_annotations = parse_ta3_attack_labels("ta3-attacks/July_Campaign.csv", july[0])
+
 header = []
 raw_data = None
-raw_data, header = prepare_data(ham_datapaths, ['friend'])
-raw_data, header = prepare_data(malware, ['install_malware'])
-raw_data, header = prepare_data(acquire_credentials, ['acquire_credentials', 'gather_general_info'])
-raw_data, header = prepare_data(access_social_network, ['access_social_network', 'gather_general_info', 'build_trust'])
-raw_data, header = prepare_data(gather_general_info, ['gather_general_info'])
-raw_data, header = prepare_data(fear, ['elicit_fear'])
-raw_data, header = prepare_data(annoy_recipient, ['annoy_recipient'])
-raw_data, header = prepare_data(may, may_annotations)
-raw_data, header = prepare_data(june, june_annotations)
-raw_data, header = prepare_data(july, july_annotations)
+raw_data, header = prepare_data(raw_data, header, ham_datapaths, ['friend'])
+raw_data, header = prepare_data(raw_data, header,malware, ['install_malware'])
+raw_data, header = prepare_data(raw_data, header,acquire_credentials, ['acquire_credentials', 'gather_general_info'])
+raw_data, header = prepare_data(raw_data, header,access_social_network, ['access_social_network', 'gather_general_info', 'build_trust'])
+raw_data, header = prepare_data(raw_data, header,gather_general_info, ['gather_general_info'])
+raw_data, header = prepare_data(raw_data, header,fear, ['elicit_fear'])
+raw_data, header = prepare_data(raw_data, header,annoy_recipient, ['annoy_recipient'])
+raw_data, header = prepare_data(raw_data, header,may_attacks, may_annotations)
+raw_data, header = prepare_data(raw_data, header,june_attacks, june_annotations)
+raw_data, header = prepare_data(raw_data, header,july_attacks, july_annotations)
 
 # transpose the data, make everything lower case string
 raw_data = np.char.lower(np.transpose(raw_data).astype('U'))
@@ -128,8 +139,8 @@ f.close()
 
 # load checkpoint (encoder with categories, weights)
 modelName = 'text-class.17-0.14.pkl'
-Categories = ['friend', 'install_malware', 'acquire_credentials', 'annoy_recipient', 'acquire_pii', 'annoy_recipient',
-            'build_trust', 'elicit_fear', 'access_social_network', 'gather_general_info', 'get_money', 'install_malware']
+Categories = ['friend', 'install_malware', 'acquire_credentials', 'annoy_recipient', 'acquire_pii',
+            'build_trust', 'elicit_fear', 'access_social_network', 'gather_general_info', 'get_money']
 checkpoint_dir = "checkpoints/"
 config = Simon({}).load_config(modelName,checkpoint_dir)
 encoder = config['encoder']

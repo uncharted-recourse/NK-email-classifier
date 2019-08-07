@@ -72,8 +72,8 @@ spam_datapaths = ["data/nigerian.jsonl",
 
 # header = []
 # raw_data = None
-# raw_data, header = prepare_data(ham_datapaths, ['friend'])
-# raw_data, header = prepare_data(spam_datapaths, ['foe'])
+# raw_data, header = prepare_data(raw_data, header, ham_datapaths, ['friend'])
+# raw_data, header = prepare_data(raw_data, header, spam_datapaths, ['foe'])
 
 # # transpose the data, make everything lower case string
 # raw_data = np.char.lower(np.transpose(raw_data).astype('U'))
@@ -135,8 +135,8 @@ test_foe_datapaths = ["dry_run_data/recourse-attacks.jsonl"]
 
 # test_header = []
 # test_raw_data = None
-# test_raw_data, test_header = prepare_data(test_friend_datapaths, ['friend'])
-# test_raw_data, test_header = prepare_data(test_foe_datapaths, ['foe'])
+# test_raw_data, test_header = prepare_data(test_raw_data, test_header, test_friend_datapaths, ['friend'])
+# test_raw_data, test_header = prepare_data(test_raw_data, test_header, test_foe_datapaths, ['foe'])
 
 # # transpose the data, make everything lower case string
 # test_raw_data = np.char.lower(np.transpose(raw_data).astype('U'))
