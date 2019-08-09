@@ -1,4 +1,4 @@
-import time
+/bin/bash: x: command not found
 import random
 import os.path
 import numpy as np
@@ -36,9 +36,10 @@ def LoadJSONLEmails(N = 50000, datapath=None):
     print('Parsing Loading {} took {} seconds'.format(datapath, time.time() - start))
     return np.transpose(lines)
 
-def prepare_data(datapaths, labels):
+def prepare_data(raw_data, header, datapaths, labels):
     if raw_data is None:
         data = np.column_stack([LoadJSONLEmails(datapath=p) for p in datapaths])
+        raw_data = data
     else:
         data = np.column_stack([LoadJSONLEmails(datapath=p) for p in datapaths])
         raw_data = np.column_stack((raw_data, data))
@@ -53,30 +54,30 @@ maxlen = 200 # max length of each sentence
 max_cells = 100 # maximum number of sentences per email
 p_threshold = 0.5 # decision boundary
 
-ham_datapaths = ["data/enron.jsonl",
-                "dry_run_data/historical_chris.jsonl",
+#ham_datapaths = ["data/enron.jsonl",
+ham_datapaths= ["dry_run_data/historical_chris.jsonl",
                 "dry_run_data/historical_christine.jsonl",
                 "dry_run_data/historical_ian.jsonl",
                 "dry_run_data/historical_paul.jsonl",
                 "dry_run_data/historical_wayne.jsonl"]
-spam_datapaths = ["data/nigerian.jsonl",
-                "data/Malware.jsonl",
-                "data/CredPhishing.jsonl",
-                "data/PhishTraining.jsonl",
-                "data/Propaganda.jsonl",
-                "data/SocialEng.jsonl",
-                "data/Spam.jsonl",
-                "ta3-attacks/ta3-may-campaign.jsonl",
+#spam_datapaths = ["data/nigerian.jsonl",
+#                "data/Malware.jsonl",
+#                "data/CredPhishing.jsonl",
+#                "data/PhishTraining.jsonl",
+#                "data/Propaganda.jsonl",
+#                "data/SocialEng.jsonl",
+#                "data/Spam.jsonl",
+spam_datapaths= ["ta3-attacks/ta3-may-campaign.jsonl",
                 "ta3-attacks/ta3-june-campaign.jsonl",
                 "ta3-attacks/ta3-july-campaign.jsonl"]
 
-# header = []
-# raw_data = None
-# raw_data, header = prepare_data(raw_data, header, ham_datapaths, ['friend'])
-# raw_data, header = prepare_data(raw_data, header, spam_datapaths, ['foe'])
+header = []
+raw_data = None
+raw_data, header = prepare_data(raw_data, header, ham_datapaths, ['friend'])
+raw_data, header = prepare_data(raw_data, header, spam_datapaths, ['foe'])
 
 # # transpose the data, make everything lower case string
-# raw_data = np.char.lower(np.transpose(raw_data).astype('U'))
+raw_data = np.char.lower(np.transpose(raw_data).astype('U'))
 
 # save data for future experiments
 # f = open('header', 'wb')
@@ -86,12 +87,12 @@ spam_datapaths = ["data/nigerian.jsonl",
 # np.save(f, raw_data)
 # f.close()
 
-header = np.load('header', allow_pickle=True)
-raw_data = np.load('raw_data', allow_pickle=True)
+#header = np.load('header', allow_pickle=True)
+#raw_data = np.load('raw_data', allow_pickle=True)
 
 # load checkpoint (encoder with categories, weights)
-modelName = 'text-class.17-0.14.pkl'
-checkpoint_dir = "checkpoints/"
+modelName = 'text-class.10-0.03.pkl'
+checkpoint_dir = "checkpoint_ta3_attack/"
 config = Simon({}).load_config(modelName,checkpoint_dir)
 encoder = config['encoder']
 checkpoint = config['checkpoint']
@@ -105,7 +106,7 @@ print(checkpoint)
 
 # build classifier model    
 Classifier = Simon(encoder=encoder) # text classifier for unit test    
-model = Classifier.generate_transfer_model(maxlen, max_cells, 2, category_count, checkpoint, checkpoint_dir, activation='sigmoid')
+model = Classifier.generate_transfer_model(maxlen, max_cells, 2, category_count, checkpoint, checkpoint_dir, activation='sigmoid', all_trainable = True)
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_accuracy'])
 
 # print all layers to make sure it is right
@@ -113,11 +114,11 @@ print("DEBUG::total number of layers:")
 print(len(model.layers))
 
 # encode the data and evaluate model
-X, y = encoder.encode_data(raw_data, header, maxlen)
+X, y, class_weights = encoder.encode_data(raw_data, header, maxlen)
 data = Classifier.setup_test_sets(X, y)
 max_cells = encoder.cur_max_cells
 start = time.time()
-history = Classifier.train_model(batch_size, checkpoint_dir, model, nb_epoch, data)
+history = Classifier.train_model(model, data, checkpoint_dir, class_weight=class_weights, epochs=10)
 end = time.time()
 print("Time for training is %f sec"%(end-start))
 
@@ -151,6 +152,6 @@ test_foe_datapaths = ["dry_run_data/recourse-attacks.jsonl"]
 
 test_header = np.load('test_header', allow_pickle=True)
 test_raw_data = np.load('test_raw_data', allow_pickle=True)
-
-test_data = type('data_type',(object,),{'X_test':test_raw_data,'y_test':test_header})    
-Classifier.evaluate_model(max_cells, model, test_data, encoder, p_threshold)
+X, y, class_weights = encoder.encode_data(test_raw_data, test_header, maxlen)
+test_data = type('data_type',(object,),{'X_test':X,'y_test':y})    
+Classifier.evaluate_model(max_cells, model, test_data, encoder, p_threshold, checkpoint_dir=checkpoint_dir)

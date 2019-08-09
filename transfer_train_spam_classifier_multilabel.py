@@ -39,10 +39,11 @@ def LoadJSONLEmails(N = 50000, datapath=None):
 def prepare_data(raw_data, header, datapaths, labels):
     if raw_data is None:
         data = np.column_stack([LoadJSONLEmails(datapath=p) for p in datapaths])
+        raw_data = data
     else:
         data = np.column_stack([LoadJSONLEmails(datapath=p) for p in datapaths])
         raw_data = np.column_stack((raw_data, data))
-    if len(labels) == 1:
+    if type(labels[0]) != list:
         header.extend([labels] * data.shape[1])
     else:
         header.extend(labels)
@@ -56,9 +57,9 @@ def parse_ta3_attack_labels(csv_file, datapath, fill = ['gather_general_info']):
     
     # create data structure linking subject to (multi) labels
     labels = labels.set_index('Scenario')
-    labels['labels'] = [[val for val in lst if str(val) != 'nan'] for lst in labels.iloc[:,1:].values]
+    labels['labels'] = [[val for val in lst if str(val) != 'nan'] for lst in labels.values]
     labels_dict = labels.to_dict()['labels']
-
+    
     # dictionary translating csv labels to model annotations
     label_to_annotation = {'Install malware': 'install_malware', 
         'Acquire credentials': 'acquire_credentials', 
@@ -66,7 +67,7 @@ def parse_ta3_attack_labels(csv_file, datapath, fill = ['gather_general_info']):
         'Build trust': 'build_trust', 
         'Gain access to social network': 'access_social_network', 
         'Gather general information': 'gather_general_info', 
-        'Get Money': 'get_money', 
+        'Get money': 'get_money', 
         'Make appointment': 'access_social_network',
     }
 
@@ -77,20 +78,22 @@ def parse_ta3_attack_labels(csv_file, datapath, fill = ['gather_general_info']):
         found = False
         for key, value in labels_dict.items():
             if key in subject or subject in key:
-                annotations.append(label_to_annotation(value))
+                labels = [label_to_annotation[v] for v in value]
+                annotations.append(labels)
                 found = True
                 break
         if not found:
             # log index, subject if nothing found in data structure
             # fill with default values
             annotations.append(fill)
+    return annotations
 
 # set important parameters
 maxlen = 200 # max length of each sentence
 max_cells = 100 # maximum number of sentences per email
 p_threshold = 0.5 # decision boundary
-
 # data annotations
+'''
 ham_datapaths = ["data/enron.jsonl",
                 "dry_run_data/historical_chris.jsonl",
                 "dry_run_data/historical_christine.jsonl",
@@ -106,10 +109,9 @@ annoy_recipient = ["data/Spam.jsonl"]
 may_attacks = ["ta3-attacks/ta3-may-campaign.jsonl"]
 june_attacks = ["ta3-attacks/ta3-june-campaign.jsonl"]
 july_attacks = ["ta3-attacks/ta3-july-campaign.jsonl"]
-may_annotations = parse_ta3_attack_labels("ta3-attacks/May_Campaign.csv", may[0], fill = ['gather_general_info', 'install_malware'])
-june_annotations = parse_ta3_attack_labels("ta3-attacks/June_Campaign.csv", june[0])
-july_annotations = parse_ta3_attack_labels("ta3-attacks/July_Campaign.csv", july[0])
-
+may_annotations = parse_ta3_attack_labels("ta3-attacks/May_Campaign.csv", may_attacks[0], fill = ['gather_general_info', 'install_malware'])
+june_annotations = parse_ta3_attack_labels("ta3-attacks/June_Campaign.csv", june_attacks[0])
+july_annotations = parse_ta3_attack_labels("ta3-attacks/July_Campaign.csv", july_attacks[0])
 header = []
 raw_data = None
 raw_data, header = prepare_data(raw_data, header, ham_datapaths, ['friend'])
@@ -122,26 +124,24 @@ raw_data, header = prepare_data(raw_data, header,annoy_recipient, ['annoy_recipi
 raw_data, header = prepare_data(raw_data, header,may_attacks, may_annotations)
 raw_data, header = prepare_data(raw_data, header,june_attacks, june_annotations)
 raw_data, header = prepare_data(raw_data, header,july_attacks, july_annotations)
-
 # transpose the data, make everything lower case string
 raw_data = np.char.lower(np.transpose(raw_data).astype('U'))
-
 #save data for future experiments
-f = open('header', 'wb')
+f = open('header_multi', 'wb')
 np.save(f, header)
 f.close()
-f = open('raw_data', 'wb')
+f = open('raw_data_multi', 'wb')
 np.save(f, raw_data)
 f.close()
-
-# header = np.load('header', allow_pickle=True)
-# raw_data = np.load('raw_data', allow_pickle=True)
+'''
+header = np.load('header_multi', allow_pickle=True)
+raw_data = np.load('raw_data_multi', allow_pickle=True)
 
 # load checkpoint (encoder with categories, weights)
-modelName = 'text-class.17-0.14.pkl'
+modelName = 'text-class.10-0.03.pkl'
 Categories = ['friend', 'install_malware', 'acquire_credentials', 'annoy_recipient', 'acquire_pii',
             'build_trust', 'elicit_fear', 'access_social_network', 'gather_general_info', 'get_money']
-checkpoint_dir = "checkpoints/"
+checkpoint_dir = "checkpoint_ta3_attack/"
 config = Simon({}).load_config(modelName,checkpoint_dir)
 encoder = config['encoder']
 checkpoint = config['checkpoint']
@@ -161,13 +161,18 @@ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['binary_acc
 # print all layers to make sure it is right
 print("DEBUG::total number of layers:")
 print(len(model.layers))
-
+print(header[-10:])
+print(len(header))
+print(raw_data.shape)
 # encode the data and evaluate model
-X, y = encoder.encode_data(raw_data, header, maxlen)
+X, y, class_weights = encoder.encode_data(raw_data, header, maxlen)
+print(X.shape)
+print(y.shape)
+print(class_weights)
 data = Classifier.setup_test_sets(X, y)
 max_cells = encoder.cur_max_cells
 start = time.time()
-history = Classifier.train_model(batch_size, checkpoint_dir, model, nb_epoch, data)
+history = Classifier.train_model(model, data, checkpoint_dir, class_weight=class_weights, batch_size=32)
 end = time.time()
 print("Time for training is %f sec"%(end-start))
 
@@ -176,6 +181,7 @@ config = { 'encoder' :  encoder,
 Classifier.save_config(config, checkpoint_dir)
 
 # evaluate model
+'''
 test_friend_datapaths = ["dry_run_data/chris.jsonl",
                 "dry_run_data/christine.jsonl",
                 "dry_run_data/ian.jsonl",
@@ -204,4 +210,4 @@ test_raw_data = np.load('test_raw_data', allow_pickle=True)
 
 test_data = type('data_type',(object,),{'X_test':test_raw_data,'y_test':test_header})    
 Classifier.evaluate_model(max_cells, model, test_data, encoder, p_threshold)
-
+'''
