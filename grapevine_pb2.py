@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='grapevine',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0fgrapevine.proto\x12\tgrapevine\"\xa9\x01\n\x07Message\x12\x0b\n\x03raw\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\t\x12\x10\n\x08language\x18\x03 \x01(\t\x12\x12\n\ncreated_at\x18\x04 \x01(\x03\x12\x0c\n\x04urls\x18\x05 \x03(\t\x12\n\n\x02id\x18\x06 \x01(\t\x12\x14\n\x0c\x66rom_account\x18\x07 \x01(\t\x12\x12\n\nto_account\x18\x08 \x03(\t\x12\x19\n\x11\x61ttachment_hashes\x18\t \x03(\t\"\x87\x01\n\x0e\x43lassification\x12\x0e\n\x06\x64omain\x18\x01 \x01(\t\x12\x12\n\nprediction\x18\x02 \x01(\t\x12\x12\n\nconfidence\x18\x03 \x01(\x01\x12\r\n\x05model\x18\x04 \x01(\t\x12\x0f\n\x07version\x18\x05 \x01(\t\x12\x1d\n\x04meta\x18\x06 \x01(\x0b\x32\x0f.grapevine.Meta\"\x88\x01\n\x04Meta\x12&\n\tsentences\x18\x01 \x03(\x0b\x32\x13.grapevine.Sentence\x12:\n\x13spamassassin_report\x18\x02 \x01(\x0b\x32\x1d.grapevine.SpamAssassinReport\x12\x1c\n\x04\x61sks\x18\x03 \x03(\x0b\x32\x0e.grapevine.Ask\"F\n\x08Sentence\x12\x16\n\x0esentence_score\x18\x01 \x01(\x01\x12\x13\n\x0bword_scores\x18\x02 \x03(\x01\x12\r\n\x05words\x18\x03 \x03(\t\"\x81\x01\n\x12SpamAssassinReport\x12\x35\n\x11quantitative_hits\x18\x01 \x03(\x0b\x32\x1a.grapevine.SpamAssassinHit\x12\x34\n\x10qualitative_hits\x18\x02 \x03(\x0b\x32\x1a.grapevine.SpamAssassinHit\"E\n\x0fSpamAssassinHit\x12\r\n\x05score\x18\x01 \x01(\x01\x12\x0e\n\x06symbol\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\"y\n\x03\x41sk\x12\x10\n\x08sentence\x18\x01 \x01(\t\x12\x14\n\x0craw_sentence\x18\x02 \x01(\t\x12\x11\n\tstart_idx\x18\x03 \x01(\x05\x12\x0f\n\x07\x65nd_idx\x18\x04 \x01(\x05\x12\x12\n\nprediction\x18\x05 \x01(\t\x12\x12\n\nconfidence\x18\x06 \x01(\x01\"]\n\nExtraction\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0e\n\x06values\x18\x02 \x03(\t\x12\x12\n\nconfidence\x18\x03 \x01(\x01\x12\r\n\x05model\x18\x04 \x01(\t\x12\x0f\n\x07version\x18\x05 \x01(\t2I\n\nClassifier\x12;\n\x08\x43lassify\x12\x12.grapevine.Message\x1a\x19.grapevine.Classification\"\x00\x32\x43\n\tExtractor\x12\x36\n\x07\x45xtract\x12\x12.grapevine.Message\x1a\x15.grapevine.Extraction\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x0fgrapevine.proto\x12\tgrapevine\"\xc1\x01\n\x07Message\x12\x0b\n\x03raw\x18\x01 \x01(\t\x12\x0c\n\x04text\x18\x02 \x01(\t\x12\x10\n\x08language\x18\x03 \x01(\t\x12\x12\n\ncreated_at\x18\x04 \x01(\x03\x12\x0c\n\x04urls\x18\x05 \x03(\t\x12\n\n\x02id\x18\x06 \x01(\t\x12\x14\n\x0c\x66rom_account\x18\x07 \x01(\t\x12\x12\n\nto_account\x18\x08 \x03(\t\x12\x19\n\x11\x61ttachment_hashes\x18\t \x03(\t\x12\x16\n\x0etraining_phase\x18\n \x01(\x08\"\x87\x01\n\x0e\x43lassification\x12\x0e\n\x06\x64omain\x18\x01 \x01(\t\x12\x12\n\nprediction\x18\x02 \x01(\t\x12\x12\n\nconfidence\x18\x03 \x01(\x01\x12\r\n\x05model\x18\x04 \x01(\t\x12\x0f\n\x07version\x18\x05 \x01(\t\x12\x1d\n\x04meta\x18\x06 \x01(\x0b\x32\x0f.grapevine.Meta\"\x88\x01\n\x04Meta\x12&\n\tsentences\x18\x01 \x03(\x0b\x32\x13.grapevine.Sentence\x12:\n\x13spamassassin_report\x18\x02 \x01(\x0b\x32\x1d.grapevine.SpamAssassinReport\x12\x1c\n\x04\x61sks\x18\x03 \x03(\x0b\x32\x0e.grapevine.Ask\"F\n\x08Sentence\x12\x16\n\x0esentence_score\x18\x01 \x01(\x01\x12\x13\n\x0bword_scores\x18\x02 \x03(\x01\x12\r\n\x05words\x18\x03 \x03(\t\"\x81\x01\n\x12SpamAssassinReport\x12\x35\n\x11quantitative_hits\x18\x01 \x03(\x0b\x32\x1a.grapevine.SpamAssassinHit\x12\x34\n\x10qualitative_hits\x18\x02 \x03(\x0b\x32\x1a.grapevine.SpamAssassinHit\"E\n\x0fSpamAssassinHit\x12\r\n\x05score\x18\x01 \x01(\x01\x12\x0e\n\x06symbol\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x03 \x01(\t\"y\n\x03\x41sk\x12\x10\n\x08sentence\x18\x01 \x01(\t\x12\x14\n\x0craw_sentence\x18\x02 \x01(\t\x12\x11\n\tstart_idx\x18\x03 \x01(\x05\x12\x0f\n\x07\x65nd_idx\x18\x04 \x01(\x05\x12\x12\n\nprediction\x18\x05 \x01(\t\x12\x12\n\nconfidence\x18\x06 \x01(\x01\"]\n\nExtraction\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0e\n\x06values\x18\x02 \x03(\t\x12\x12\n\nconfidence\x18\x03 \x01(\x01\x12\r\n\x05model\x18\x04 \x01(\t\x12\x0f\n\x07version\x18\x05 \x01(\t2I\n\nClassifier\x12;\n\x08\x43lassify\x12\x12.grapevine.Message\x1a\x19.grapevine.Classification\"\x00\x32\x43\n\tExtractor\x12\x36\n\x07\x45xtract\x12\x12.grapevine.Message\x1a\x15.grapevine.Extraction\"\x00\x62\x06proto3')
 )
 
 
@@ -96,6 +96,13 @@ _MESSAGE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='training_phase', full_name='grapevine.Message.training_phase', index=9,
+      number=10, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -109,7 +116,7 @@ _MESSAGE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=31,
-  serialized_end=200,
+  serialized_end=224,
 )
 
 
@@ -174,8 +181,8 @@ _CLASSIFICATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=203,
-  serialized_end=338,
+  serialized_start=227,
+  serialized_end=362,
 )
 
 
@@ -219,8 +226,8 @@ _META = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=341,
-  serialized_end=477,
+  serialized_start=365,
+  serialized_end=501,
 )
 
 
@@ -264,8 +271,8 @@ _SENTENCE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=479,
-  serialized_end=549,
+  serialized_start=503,
+  serialized_end=573,
 )
 
 
@@ -302,8 +309,8 @@ _SPAMASSASSINREPORT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=552,
-  serialized_end=681,
+  serialized_start=576,
+  serialized_end=705,
 )
 
 
@@ -347,8 +354,8 @@ _SPAMASSASSINHIT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=683,
-  serialized_end=752,
+  serialized_start=707,
+  serialized_end=776,
 )
 
 
@@ -413,8 +420,8 @@ _ASK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=754,
-  serialized_end=875,
+  serialized_start=778,
+  serialized_end=899,
 )
 
 
@@ -472,8 +479,8 @@ _EXTRACTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=877,
-  serialized_end=970,
+  serialized_start=901,
+  serialized_end=994,
 )
 
 _CLASSIFICATION.fields_by_name['meta'].message_type = _META
@@ -556,8 +563,8 @@ _CLASSIFIER = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=972,
-  serialized_end=1045,
+  serialized_start=996,
+  serialized_end=1069,
   methods=[
   _descriptor.MethodDescriptor(
     name='Classify',
@@ -580,8 +587,8 @@ _EXTRACTOR = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=1,
   serialized_options=None,
-  serialized_start=1047,
-  serialized_end=1114,
+  serialized_start=1071,
+  serialized_end=1138,
   methods=[
   _descriptor.MethodDescriptor(
     name='Extract',

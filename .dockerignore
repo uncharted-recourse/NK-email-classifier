@@ -2,9 +2,13 @@
 
 # mount volumes for data storage instead
 checkpoints/
+deployed_checkpoints_old/
 data/
 prior_precossing_scripts/
 protos/
+dry_run_data/
+!deployed_checkpoints/
+!ta3_attacks/
 
 # other files
 ClassifyJSONLEmail.py

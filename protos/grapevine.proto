@@ -8,6 +8,11 @@ message Message {
     string language = 3;
     int64 created_at = 4;
     repeated string urls = 5;
+    string id = 6;
+    string from_account = 7;
+    repeated string to_account = 8;
+    repeated string attachment_hashes = 9;
+    bool training_phase = 10;
 }
 
 service Classifier {

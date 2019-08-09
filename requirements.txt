@@ -1,22 +1,8 @@
-setuptools
-ipykernel
-jupyter
-matplotlib
 numpy
-scipy>=0.19.0
-sklearn
-pandas>=0.19.2
-Pillow
-Keras>2.0.2,<=2.1.6
-tensorflow >=1.1.0,<=1.8.0
-faker>=0.7.7
-h5py >= 2.7.0
-dill
-kafka
+pandas
 flask
 requests
 nltk
 grpcio-tools
-flask
-click # must install manually - `pip3 install click`, won't work through requirements.txt file 
-git+https://github.com/NewKnowledge/simon@c2b1d5fac8f0929f681012731a298081c893f02c # Simon attention model
+git+https://github.com/NewKnowledge/simon@cd8074c0fc5b5e94eaddc68904537c8fb85e6f2d # Simon attention model ## update Simon install for class weights
+tensorflow==1.14

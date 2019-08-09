@@ -10,6 +10,7 @@ import grpc
 import configparser
 import grapevine_pb2
 import grapevine_pb2_grpc
+import numpy as np
 
 def run():
 
@@ -21,31 +22,29 @@ def run():
         language='Field not used',
         created_at=100, #not used
         text="The meeting has been rescheduled for next week sometime. I will send out an email providing some more details. This shouldn't affect the working group going forward, but I will also double check with the manager.",
+        training_phase = True,
     )
-    testMessageHAM.urls.extend(['www.hacker.com'])
+    #testMessageHAM.urls.extend(['www.jpl.org', 'berkeley.edu/cs'])
 
     testMessageSPAM = grapevine_pb2.Message(
         raw="This raw field isn't used...",
         language='Field not used',
         created_at=100, #not used
         text="Your email account has been hacked! Please log in to the following site to change your password.",
+        training_phase = True,
     )
-    testMessageSPAM.urls.extend(['www.jpl.org', 'berkeley.edu/cs'])
-
+    testMessageSPAM.urls.extend(['www.hacker.com'])
 
     ### This should be classified as HAM
-    classification = stub.Classify(testMessageHAM)
-    confidence = classification.confidence
-    print("Classifier gRPC client received this classifier score for HAM example (class/confidence): " + str(classification.prediction)+ "/" + str(confidence) + "\n\n")
-
-    
+    for i in np.arange(30):
+        classification = stub.Classify(testMessageHAM)
+        confidence = classification.confidence
+        print("Classifier gRPC client received this classifier score for HAM example (class/confidence): " + str(classification.prediction)+ "/" + str(confidence) + "\n\n")
+ 
     ### This should be classified as SPAM
     classification = stub.Classify(testMessageSPAM)
     confidence = classification.confidence
     print("Classifier gRPC client received this classifier score for SPAM example (class/confidence): " + str(classification.prediction) + "/" + str(confidence) + "\n\n")    
-
-
-
 
 if __name__ == '__main__':
     logging.basicConfig() # purpose?
